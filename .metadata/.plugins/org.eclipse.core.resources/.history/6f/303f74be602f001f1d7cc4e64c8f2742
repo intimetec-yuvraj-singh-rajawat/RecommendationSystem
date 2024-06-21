@@ -1,0 +1,31 @@
+package Service;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.*;
+
+import model.Feedback;
+public class FeedbackService {
+	
+	public static List<Feedback> getFeedbacks(){
+		List<Feedback> feedbacks = new ArrayList<>();
+        try (Connection conn = getConnection()) {
+            String query = "SELECT * FROM Feedbacks";
+            PreparedStatement stmt = conn.prepareStatement(query);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String comment = rs.getString("comment");
+                int rating = rs.getInt("rating");
+                Date feedbackDate = rs.getDate("feedbackDate");
+                int itemId = rs.getInt("itemId");
+                String userId = rs.getString("userId");
+                feedbacks.add(new Feedback(id, comment, rating, feedbackDate, itemId, userId));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return feedbacks;
+    }
+		
+}

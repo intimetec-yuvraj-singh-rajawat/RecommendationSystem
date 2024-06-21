@@ -1,0 +1,26 @@
+package service;
+
+import db.MenuDAO;
+import model.Menu;
+
+import java.sql.SQLException;
+
+public class AdminService {
+    private final MenuDAO menuDAO;
+
+    public AdminService() {
+        this.menuDAO = new MenuDAO();
+    }
+
+    public void addMenuItem(Menu menu) throws SQLException {
+        menuDAO.addMenuItem(menu);
+    }
+
+    public void updateMenuItem(Menu menu) throws SQLException {
+        menuDAO.updateMenuItem(menu);
+    }
+
+    public void deleteMenuItem(int menuId) throws SQLException {
+        menuDAO.deleteMenuItem(menuId);
+    }
+}

@@ -1,0 +1,22 @@
+package db;
+
+import model.Feedback;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+public class FeedbackDAO {
+    public void addFeedback(Feedback feedback) throws SQLException {
+        String query = "INSERT INTO Feedback (user_id, menu_id, comment, rating, feedback_date) VALUES (?, ?, ?, ?, ?)";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, feedback.getUserId());
+            statement.setInt(2, feedback.getMenuId());
+            statement.setString(3, feedback.getComment());
+            statement.setInt(4, feedback.getRating());
+            statement.setString(5, feedback.getFeedbackDate());
+            statement.executeUpdate();
+        }
+    }
+}

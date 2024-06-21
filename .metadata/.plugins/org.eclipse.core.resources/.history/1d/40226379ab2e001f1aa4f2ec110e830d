@@ -1,0 +1,109 @@
+package client;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.math.BigDecimal;
+import java.net.Socket;
+import java.util.Scanner;
+
+public class CafeteriaClient {
+    private static final String SERVER_ADDRESS = "localhost";
+    private static final int SERVER_PORT = 12345;
+
+    public static void main(String[] args) {
+        try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             Scanner scanner = new Scanner(System.in)) {
+
+            // Start a new thread to listen for messages from the server
+            Thread listenerThread = new Thread(new Runnable() {
+                public void run() {
+                    String serverMessage;
+                    try {
+                        while ((serverMessage = in.readLine()) != null) {
+                            System.out.println("Server: " + serverMessage);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            listenerThread.start();
+
+            System.out.println("Connected to the server.");
+
+            // Perform authentication
+            System.out.print("Enter your username: ");
+            String username = scanner.nextLine();
+            System.out.print("Enter your password: ");
+            String password = scanner.nextLine();
+
+            // Send authentication request to the server
+            out.println("LOGIN " + username + " " + password);
+
+            // Wait for server response
+            String response = in.readLine();
+            System.out.println(response);
+            if (response.equals("LOGIN SUCCESSFUL")) {
+                response = in.readLine(); // Read role ID
+                System.out.println(response);
+                if (response.contains("ROLE ID: 1")) { // Admin role
+                    adminMenu(scanner, out);
+                }
+            } else {
+                System.out.println("Login failed");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void adminMenu(Scanner scanner, PrintWriter out) {
+        while (true) {
+            System.out.println("Admin Menu:");
+            System.out.println("1. Add Menu Item");
+            System.out.println("2. Update Menu Item");
+            System.out.println("3. Delete Menu Item");
+            System.out.println("4. Exit");
+
+            System.out.print("Enter your choice: ");
+            int choice = Integer.parseInt(scanner.nextLine());
+
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter item name: ");
+                    String addName = scanner.nextLine();
+                    System.out.print("Enter item price: ");
+                    BigDecimal addPrice = new BigDecimal(scanner.nextLine());
+                    System.out.print("Is item available (true/false): ");
+                    boolean addAvailability = Boolean.parseBoolean(scanner.nextLine());
+                    out.println("ADD_MENU_ITEM " + addName + " " + addPrice + " " + addAvailability);
+                    break;
+                case 2:
+                    System.out.print("Enter item ID to update: ");
+                    int updateId = Integer.parseInt(scanner.nextLine());
+                    System.out.print("Enter new item name: ");
+                    String updateName = scanner.nextLine();
+                    System.out.print("Enter new item price: ");
+                    BigDecimal updatePrice = new BigDecimal(scanner.nextLine());
+                    System.out.print("Is item available (true/false): ");
+                    boolean updateAvailability = Boolean.parseBoolean(scanner.nextLine());
+                    out.println("UPDATE_MENU_ITEM " + updateId + " " + updateName + " " + updatePrice + " " + updateAvailability);
+                    break;
+                case 3:
+                    System.out.print("Enter item ID to delete: ");
+                    int deleteId = Integer.parseInt(scanner.nextLine());
+                    out.println("DELETE_MENU_ITEM " + deleteId);
+                    break;
+                case 4:
+                    return;
+                default:
+                    System.out.println("Invalid choice");
+            }
+        }
+    }
+}

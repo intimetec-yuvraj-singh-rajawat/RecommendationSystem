@@ -1,0 +1,16 @@
+package model;
+
+public class Recommendation {
+    private int id;
+    private int chefId;
+    private int menuId;
+    private String recommendationDate;
+
+    public Recommendation(int chefId, int menuId, String recommendationDate) {
+        this.chefId = chefId;
+        this.menuId = menuId;
+        this.recommendationDate = recommendationDate;
+    }
+
+    // Getters and Setters
+}

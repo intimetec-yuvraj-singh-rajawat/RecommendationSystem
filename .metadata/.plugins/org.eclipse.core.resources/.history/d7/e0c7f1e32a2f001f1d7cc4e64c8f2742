@@ -1,0 +1,67 @@
+package Service;
+
+import model.MenuItem;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import db.Database;
+
+public class MenuService {
+    private final Connection connection;
+
+    public MenuService() throws SQLException {
+        // Initialize your database connection here
+        connection = Database.getConnection();
+    }
+
+    public List<MenuItem> getAllMenuItems() throws SQLException {
+        List<MenuItem> menuItems = new ArrayList<>();
+        String query = "SELECT * FROM MenuItem";
+        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
+            while (rs.next()) {
+                MenuItem menuItem = new MenuItem(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getDouble("price"),
+                        rs.getBoolean("availability")
+                );
+                menuItems.add(menuItem);
+            }
+        }
+        return menuItems;
+    }
+
+    public void addMenuItem(MenuItem menuItem) throws SQLException {
+        String query = "INSERT INTO MenuItem (name, description, price, availability) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+            pstmt.setString(1, menuItem.getName());
+            pstmt.setString(2, menuItem.getDescription());
+            pstmt.setDouble(3, menuItem.getPrice());
+            pstmt.setBoolean(4, menuItem.isAvailability());
+            pstmt.executeUpdate();
+        }
+    }
+
+    public void updateMenuItem(MenuItem menuItem) throws SQLException {
+        String query = "UPDATE MenuItem SET name = ?, description = ?, price = ?, availability = ? WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+            pstmt.setString(1, menuItem.getName());
+            pstmt.setString(2, menuItem.getDescription());
+            pstmt.setDouble(3, menuItem.getPrice());
+            pstmt.setBoolean(4, menuItem.isAvailability());
+            pstmt.setInt(5, menuItem.getId());
+            pstmt.executeUpdate();
+        }
+    }
+
+    public void deleteMenuItem(int id) throws SQLException {
+        String query = "DELETE FROM MenuItem WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+            pstmt.setInt(1, id);
+            pstmt.executeUpdate();
+        }
+    }
+}

@@ -1,0 +1,84 @@
+package server;
+
+import db.UserDAO;
+import model.User;
+import service.UserService;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.sql.SQLException;
+
+public class ClientHandler implements Runnable {
+    private final Socket clientSocket;
+    private final UserService userService;
+
+    public ClientHandler(Socket clientSocket) {
+        this.clientSocket = clientSocket;
+        this.userService = new UserService(); // Assuming UserService handles user-related operations
+    }
+
+    @Override
+    public void run() {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                if (inputLine.startsWith("LOGIN ")) {
+                    handleLogin(inputLine, out);
+                } else if (inputLine.startsWith("ADD_USER ")) {
+                    handleAddUser(inputLine, out);
+                } else {
+                    out.println("Unknown command");
+                }
+            }
+        } catch (IOException | SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                clientSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println("Client disconnected");
+        }
+    }
+
+    private void handleLogin(String inputLine, PrintWriter out) throws SQLException {
+        String[] parts = inputLine.split(" ");
+        if (parts.length == 3) {
+            String username = parts[1];
+            String password = parts[2];
+            if (userService.validateLogin(username, password)) {
+                out.println("LOGIN SUCCESSFUL");
+                Long roleId = userService.getRoleId(username, password);
+                out.println("ROLE ID: " + roleId);
+            } else {
+                out.println("LOGIN FAILED");
+            }
+        } else {
+            out.println("Invalid LOGIN command");
+        }
+    }
+
+    private void handleAddUser(String inputLine, PrintWriter out) throws SQLException {
+        String[] parts = inputLine.split(" ");
+        if (parts.length == 4) {
+            String username = parts[1];
+            String password = parts[2];
+            Long roleId = Long.valueOf(parts[3]);
+            try {
+                User user = new User(username, password, roleId);
+                userService.addUser(user);
+                out.println("User added successfully");
+            } catch (NumberFormatException e) {
+                out.println("Invalid role ID format");
+            }
+        } else {
+            out.println("Invalid ADD_USER command");
+        }
+    }
+}

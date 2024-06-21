@@ -1,0 +1,41 @@
+package db;
+
+import model.Menu;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+public class MenuDAO {
+    public void addMenuItem(Menu menu) throws SQLException {
+        String query = "INSERT INTO Menu (name, price, availability_status) VALUES (?, ?, ?)";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, menu.getName());
+            statement.setBigDecimal(2, menu.getPrice());
+            statement.setBoolean(3, menu.isAvailable());
+            statement.executeUpdate();
+        }
+    }
+
+    public void updateMenuItem(Menu menu) throws SQLException {
+        String query = "UPDATE Menu SET name = ?, price = ?, availability_status = ? WHERE id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, menu.getName());
+            statement.setBigDecimal(2, menu.getPrice());
+            statement.setBoolean(3, menu.isAvailable());
+            statement.setInt(4, menu.getId());
+            statement.executeUpdate();
+        }
+    }
+
+    public void deleteMenuItem(int menuId) throws SQLException {
+        String query = "DELETE FROM Menu WHERE id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, menuId);
+            statement.executeUpdate();
+        }
+    }
+}

@@ -1,0 +1,64 @@
+package db;
+
+import model.MenuItem;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class MenuDAO {
+    public void addMenuItem(MenuItem menuItem) throws SQLException {
+        try (Connection connection = Database.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(
+                     "INSERT INTO menu (name, price, availability) VALUES (?, ?, ?)")) {
+
+            preparedStatement.setString(1, menuItem.getName());
+            preparedStatement.setBigDecimal(2, menuItem.getPrice());
+            preparedStatement.setBoolean(3, menuItem.isAvailable());
+
+            preparedStatement.executeUpdate();
+        }
+    }
+
+    public void updateMenuItem(MenuItem menuItem) throws SQLException {
+        try (Connection connection = Database.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(
+                     "UPDATE menu SET name = ?, price = ?, availability = ? WHERE id = ?")) {
+
+            preparedStatement.setString(1, menuItem.getName());
+            preparedStatement.setBigDecimal(2, menuItem.getPrice());
+            preparedStatement.setBoolean(3, menuItem.isAvailable());
+            preparedStatement.setInt(4, menuItem.getId());
+
+            preparedStatement.executeUpdate();
+        }
+    }
+
+    public void deleteMenuItem(int id) throws SQLException {
+        try (Connection connection = Database.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM menu WHERE id = ?")) {
+
+            preparedStatement.setInt(1, id);
+            preparedStatement.executeUpdate();
+        }
+    }
+
+    public List<MenuItem> getAllMenuItems() throws SQLException {
+        List<MenuItem> menuItems = new ArrayList<>();
+        try (Connection connection = Database.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM menu");
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String name = resultSet.getString("name");
+                BigDecimal price = resultSet.getBigDecimal("price");
+                boolean availability = resultSet.getBoolean("availability");
+                menuItems.add(new MenuItem(id, name, price, availability));
+            }
+        }
+        return menuItems;
+    }
+}

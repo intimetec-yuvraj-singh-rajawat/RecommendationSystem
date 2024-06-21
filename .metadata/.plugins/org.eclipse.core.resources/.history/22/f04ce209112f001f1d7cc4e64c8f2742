@@ -1,0 +1,165 @@
+package handler;
+
+import Service.UserService;
+import Service.MenuService;
+import model.MenuItem;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.sql.SQLException;
+
+public class ClientHandler implements Runnable {
+    private final Socket clientSocket;
+    private final UserService userService;
+    private final MenuService menuService;
+    private PrintWriter out;
+    private BufferedReader in;
+
+    public ClientHandler(Socket clientSocket) {
+        this.clientSocket = clientSocket;
+        this.userService = new UserService();
+        this.menuService = new MenuService();
+        try {
+            this.out = new PrintWriter(clientSocket.getOutputStream(), true);
+            this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void run() {
+        try {
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                if (inputLine.startsWith("LOGIN ")) {
+                    handleLogin(inputLine);
+                    out.println("Press 1 to logout"); // After successful login message
+                } else if (inputLine.equalsIgnoreCase("LOGOUT")) {
+                    handleLogout();
+                    break;
+                } else if (inputLine.startsWith("ADD MENU")) {
+                    handleAddMenuItem(inputLine);
+                } else if (inputLine.startsWith("UPDATE MENU")) {
+                    handleUpdateMenuItem(inputLine);
+                } else if (inputLine.startsWith("DELETE MENU")) {
+                    handleDeleteMenuItem(inputLine);
+                } else {
+                    out.println("Unknown command");
+                }
+            }
+        } catch (IOException | SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+            System.out.println("Client disconnected");
+        }
+    }
+
+    private void handleLogin(String inputLine) throws SQLException {
+        String[] parts = inputLine.split(" ");
+        if (parts.length == 3) {
+            String username = parts[1];
+            String password = parts[2];
+            if (userService.validateLogin(username, password)) {
+                out.println("LOGIN SUCCESSFUL");
+                String roleName = userService.getRoleName(username, password);
+                out.println("ROLE: " + roleName);
+            } else {
+                out.println("LOGIN FAILED");
+            }
+        } else {
+            out.println("Invalid LOGIN command");
+        }
+    }
+
+    private void handleLogout() {
+        out.println("LOGOUT SUCCESSFUL");
+        closeResources();
+    }
+
+    private void handleAddMenuItem(String inputLine) {
+        String[] parts = inputLine.split(" ", 4); // Split into 4 parts to capture name, price, available
+        if (parts.length == 4) {
+            String name = parts[1];
+            double price = Double.parseDouble(parts[2]);
+            boolean available = Boolean.parseBoolean(parts[3]);
+            MenuItem menuItem = new MenuItem(id, name, price, available);
+            boolean success = menuService.addMenuItem(menuItem);
+            if (success) {
+                out.println("Menu item added successfully.");
+            } else {
+                out.println("Failed to add menu item.");
+            }
+        } else {
+            out.println("Invalid ADD MENU command");
+        }
+    }
+
+    private void handleUpdateMenuItem(String inputLine) {
+        String[] parts = inputLine.split(" ", 5); // Split into 5 parts to capture id, name, price, available
+        if (parts.length == 5) {
+            try {
+                int id = Integer.parseInt(parts[1]);
+                String name = parts[2];
+                double price = Double.parseDouble(parts[3]);
+                boolean available = Boolean.parseBoolean(parts[4]);
+                MenuItem menuItem = new MenuItem(id, name, price, available);
+                boolean success = menuService.updateMenuItem(menuItem);
+                if (success) {
+                    out.println("Menu item updated successfully.");
+                } else {
+                    out.println("Failed to update menu item.");
+                }
+            } catch (NumberFormatException e) {
+                out.println("Invalid ID provided for UPDATE MENU command.");
+            }
+        } else {
+            out.println("Invalid UPDATE MENU command");
+        }
+    }
+
+    private void handleDeleteMenuItem(String inputLine) {
+        String[] parts = inputLine.split(" ", 2); // Split into 2 parts to capture id
+        if (parts.length == 2) {
+            try {
+                int id = Integer.parseInt(parts[1]);
+                boolean success = menuService.deleteMenuItem(id);
+                if (success) {
+                    out.println("Menu item deleted successfully.");
+                } else {
+                    out.println("Failed to delete menu item.");
+                }
+            } catch (NumberFormatException e) {
+                out.println("Invalid ID provided for DELETE MENU command.");
+            }
+        } else {
+            out.println("Invalid DELETE MENU command");
+        }
+    }
+
+    private void closeResources() {
+        try {
+            if (out != null) {
+                out.close();
+            }
+            if (in != null) {
+                in.close();
+            }
+            if (clientSocket != null && !clientSocket.isClosed()) {
+                clientSocket.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendMessage(String message) {
+        if (out != null) {
+            out.println(message);
+        }
+    }
+}

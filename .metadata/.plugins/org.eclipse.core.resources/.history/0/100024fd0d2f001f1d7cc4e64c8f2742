@@ -1,0 +1,190 @@
+package handler;
+
+import Service.UserService;
+import Service.MenuService;
+import model.MenuItem;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.sql.SQLException;
+import java.util.List;
+
+public class ClientHandler implements Runnable {
+    private final Socket clientSocket;
+    private final UserService userService;
+    private final MenuService menuService;
+    private PrintWriter out;
+    private BufferedReader in;
+
+    public ClientHandler(Socket clientSocket) {
+        this.clientSocket = clientSocket;
+        this.userService = new UserService();
+        this.menuService = new MenuService();
+        try {
+            this.out = new PrintWriter(clientSocket.getOutputStream(), true);
+            this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void run() {
+        try {
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                if (inputLine.startsWith("LOGIN ")) {
+                    handleLogin(inputLine);
+                } else if (inputLine.equalsIgnoreCase("LOGOUT")) {
+                    handleLogout();
+                    break;
+                } else if (inputLine.equalsIgnoreCase("LIST MENU")) {
+                    handleListMenu();
+                } else if (inputLine.startsWith("ADD MENU ") && isAdmin()) {
+                    String[] parts = inputLine.split(" ", 3);
+                    if (parts.length == 3) {
+                        String menuItemName = parts[2];
+                        handleAddMenuItem(menuItemName);
+                    } else {
+                        out.println("Invalid ADD MENU command");
+                    }
+                } else if (inputLine.startsWith("UPDATE MENU ") && isAdmin()) {
+                    String[] parts = inputLine.split(" ", 4);
+                    if (parts.length == 4) {
+                        int itemId = Integer.parseInt(parts[2]);
+                        String updatedItemName = parts[3];
+                        handleUpdateMenuItem(itemId, updatedItemName);
+                    } else {
+                        out.println("Invalid UPDATE MENU command");
+                    }
+                } else if (inputLine.startsWith("DELETE MENU ") && isAdmin()) {
+                    String[] parts = inputLine.split(" ", 3);
+                    if (parts.length == 3) {
+                        int itemId = Integer.parseInt(parts[2]);
+                        handleDeleteMenuItem(itemId);
+                    } else {
+                        out.println("Invalid DELETE MENU command");
+                    }
+                } else {
+                    out.println("Unknown command");
+                }
+            }
+        } catch (IOException | SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+            System.out.println("Client disconnected");
+        }
+    }
+
+    private void handleLogin(String inputLine) throws SQLException {
+        String[] parts = inputLine.split(" ");
+        if (parts.length == 3) {
+            String username = parts[1];
+            String password = parts[2];
+            if (userService.validateLogin(username, password)) {
+                out.println("LOGIN SUCCESSFUL");
+                String roleName = userService.getRoleName(username, password);
+                out.println("ROLE: " + roleName);
+            } else {
+                out.println("LOGIN FAILED");
+            }
+        } else {
+            out.println("Invalid LOGIN command");
+        }
+    }
+
+    private void handleLogout() {
+        out.println("LOGOUT SUCCESSFUL");
+        try {
+            clientSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleListMenu() {
+        try {
+            List<MenuItem> menuItems = menuService.getAllMenuItems();
+            if (menuItems.isEmpty()) {
+                out.println("No menu items available.");
+            } else {
+                out.println("MENU ITEMS:");
+                for (MenuItem item : menuItems) {
+                    out.println(item.getId() + ". " + item.getName() + " - Price: $" + item.getPrice() + " - Availability: " + (item.isAvailable() ? "Available" : "Not Available"));
+                }
+            }
+        } catch (SQLException e) {
+            out.println("Error fetching menu items: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void handleAddMenuItem(String menuItemName) {
+        try {
+            MenuItem newItem = menuService.addMenuItem(menuItemName, 0.0, true); // Default price and availability
+            out.println("Added: " + newItem.getId() + ". " + newItem.getName());
+        } catch (SQLException e) {
+            out.println("Error adding menu item: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void handleUpdateMenuItem(int itemId, String updatedItemName) {
+        try {
+            MenuItem updatedItem = menuService.updateMenuItem(itemId, updatedItemName);
+            if (updatedItem != null) {
+                out.println("Updated item " + itemId + " to: " + updatedItem.getName());
+            } else {
+                out.println("Menu item with ID " + itemId + " not found.");
+            }
+        } catch (SQLException e) {
+            out.println("Error updating menu item: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void handleDeleteMenuItem(int itemId) {
+        try {
+            boolean deleted = menuService.deleteMenuItem(itemId);
+            if (deleted) {
+                out.println("Deleted item " + itemId);
+            } else {
+                out.println("Menu item with ID " + itemId + " not found.");
+            }
+        } catch (SQLException e) {
+            out.println("Error deleting menu item: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private boolean isAdmin() {
+        // Dummy implementation - replace with actual role check
+        return true; // For testing purposes, assuming always admin
+    }
+
+    private void closeResources() {
+        try {
+            if (out != null) {
+                out.close();
+            }
+            if (in != null) {
+                in.close();
+            }
+            if (clientSocket != null && !clientSocket.isClosed()) {
+                clientSocket.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendMessage(String message) {
+        if (out != null) {
+            out.println(message);
+        }
+    }
+}

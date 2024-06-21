@@ -1,0 +1,54 @@
+package ClientServer;
+
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
+
+public class CafeteriaClient {
+    private static final String SERVER_ADDRESS = "localhost";
+    private static final int SERVER_PORT = 12345;
+
+    public static void main(String[] args) {
+        try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             Scanner scanner = new Scanner(System.in)) {
+
+            Thread listenerThread = new Thread(() -> {
+                String serverMessage;
+                try {
+                    while ((serverMessage = in.readLine()) != null) {
+                        System.out.println("Server: " + serverMessage);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            listenerThread.start();
+
+            System.out.println("Connected to the server.");
+            System.out.print("Enter your client ID: ");
+            String clientId = scanner.nextLine();
+            System.out.print("Enter your password: ");
+            String password = scanner.nextLine();
+            out.println(clientId);
+            out.println(password);
+
+            String authResponse = in.readLine();
+            if ("Authenticated".equals(authResponse)) {
+                System.out.println("Authentication successful.");
+                System.out.println("Enter your messages:");
+
+                while (scanner.hasNextLine()) {
+                    String clientMessage = scanner.nextLine();
+                    out.println(clientMessage);
+                }
+            } else {
+                System.out.println("Authentication failed. Exiting.");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}

@@ -1,0 +1,105 @@
+package ClientServer;
+
+import java.io.*;
+import java.net.*;
+import java.sql.*;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class CafeteriaServer {
+    private static final int PORT = 12345;
+    private static Map<String, ClientHandler> clients = new ConcurrentHashMap<>();
+
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/cafeteria";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "yourpassword";
+
+    public static void main(String[] args) {
+        System.out.println("Cafeteria Server is running...");
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                ClientHandler clientHandler = new ClientHandler(clientSocket);
+                new Thread(clientHandler).start();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void sendMessageToClient(String clientId, String message) {
+        ClientHandler clientHandler = clients.get(clientId);
+        if (clientHandler != null) {
+            clientHandler.sendMessage(message);
+        }
+    }
+
+    private static class ClientHandler implements Runnable {
+        private Socket socket;
+        private PrintWriter out;
+        private BufferedReader in;
+        private String clientId;
+
+        public ClientHandler(Socket socket) {
+            this.socket = socket;
+        }
+
+        public void run() {
+            try {
+                out = new PrintWriter(socket.getOutputStream(), true);
+                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                out.println("Enter your client ID:");
+                clientId = in.readLine();
+                out.println("Enter your password:");
+                String password = in.readLine();
+
+                if (authenticate(clientId, password)) {
+                    out.println("Authenticated");
+                    clients.put(clientId, this);
+
+                    String message;
+                    while ((message = in.readLine()) != null) {
+                        System.out.println("Received from " + clientId + ": " + message);
+                        sendMessageToClient(clientId, "Echo: " + message);
+                    }
+                } else {
+                    out.println("Authentication failed");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (clientId != null) {
+                    clients.remove(clientId);
+                }
+            }
+        }
+
+        private boolean authenticate(String clientId, String password) {
+            boolean isAuthenticated = false;
+            try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+                 PreparedStatement statement = connection.prepareStatement("SELECT password FROM users WHERE client_id = ?")) {
+                statement.setString(1, clientId);
+                ResultSet resultSet = statement.executeQuery();
+                if (resultSet.next()) {
+                    String storedPassword = resultSet.getString("password");
+                    isAuthenticated = storedPassword.equals(password);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return isAuthenticated;
+        }
+
+        public void sendMessage(String message) {
+            if (out != null) {
+                out.println(message);
+            }
+        }
+    }
+}

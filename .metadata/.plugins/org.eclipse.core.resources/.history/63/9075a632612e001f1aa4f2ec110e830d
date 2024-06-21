@@ -1,0 +1,24 @@
+package Service;
+
+import db.NotificationDAO;
+import model.Notification;
+
+import java.sql.SQLException;
+import java.util.List;
+
+public class NotificationService {
+    private final NotificationDAO notificationDAO;
+
+    public NotificationService() {
+        this.notificationDAO = new NotificationDAO();
+    }
+
+    public void sendNotification(int userId, String message) throws SQLException {
+        Notification notification = new Notification(userId, message);
+        notificationDAO.addNotification(notification);
+    }
+
+    public List<Notification> getUserNotifications(int userId) throws SQLException {
+        return notificationDAO.getNotificationsByUserId(userId);
+    }
+}

@@ -1,0 +1,11 @@
+package Service;
+
+import model.User;
+
+public class UserService {
+
+	public static User createUserObject() {
+		User user = new User();
+	}
+
+}

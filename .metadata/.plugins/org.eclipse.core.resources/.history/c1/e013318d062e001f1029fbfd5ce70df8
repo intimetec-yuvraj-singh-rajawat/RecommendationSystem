@@ -1,0 +1,26 @@
+package service;
+
+import db.UserDAO;
+import model.User;
+
+import java.sql.SQLException;
+
+public class UserService {
+    private UserDAO userDAO;
+
+    public UserService() {
+        this.userDAO = new UserDAO();
+    }
+
+    public boolean validateLogin(String username, String password) throws SQLException {
+        return userDAO.validateUser(username, password);
+    }
+
+    public void addUser(User user) throws SQLException {
+        userDAO.addUser(user);
+    }
+
+    public Long getRoleId(String username, String password) throws SQLException {
+        return userDAO.getRoleId(username, password);
+    }
+}

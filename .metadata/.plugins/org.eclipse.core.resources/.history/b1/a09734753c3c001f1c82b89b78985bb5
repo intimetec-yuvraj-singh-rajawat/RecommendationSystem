@@ -1,0 +1,109 @@
+package client;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.Scanner;
+
+public class AdminHandler {
+	private Socket socket;
+	private BufferedReader in;
+	private PrintWriter out;
+	private Scanner scanner;
+
+	public AdminHandler(Socket socket, PrintWriter out, BufferedReader in) {
+        this.socket = socket;
+        this.out = out;
+        this.in = in;
+        this.scanner = new Scanner(System.in);
+    }
+	
+	private void showMenu() {
+		do {
+        System.out.println("Select an option:");
+        System.out.println("1. View all menu items");
+        System.out.println("2. Add a new menu item");
+        System.out.println("3. Update an existing menu item");
+        System.out.println("4. Delete a menu item");
+        System.out.println("5. Type Logout to disconnect");
+        int  choice = scanner.nextInt();
+        scanner.nextLine();
+        handleUserChoice(choice);
+    }
+		While(){
+			
+		}
+	}
+	
+	private void handleUserChoice(int choice) {
+        switch (choice) {
+            
+            case 1:
+            	viewMenu();
+                break;
+            case 2:
+            	addMenuItems(scanner);
+                break;
+            case 3:
+                deleteMenuItems(scanner);
+                break;
+            case :
+                ();
+                break;
+            case 8:
+                viewDiscardMenu();
+                break;
+            default:
+                System.out.println("Invalid choice. Please try again.");
+                break;
+        }
+    }
+	  private void addMenuItems() {
+		  System.out.print("Enter name: ");
+          String name = scanner.nextLine();
+          System.out.print("Enter description: ");
+          String description = scanner.nextLine();
+          System.out.print("Enter price: ");
+          double price = Double.parseDouble(scanner.nextLine());
+          System.out.print("Is available (true/false): ");
+          boolean available = Boolean.parseBoolean(scanner.nextLine());
+          out.println("ADD " + name + " " + description + " " + price + " " + available);
+	  }
+
+	    private void updateMenuItems(Scanner scanner) {
+	    	  System.out.print("Enter ID of the menu item to update: ");
+              int id = Integer.parseInt(scanner.nextLine());
+              System.out.print("Enter new name: ");
+              String name = scanner.nextLine();
+              System.out.print("Enter new description: ");
+              String description = scanner.nextLine();
+              System.out.print("Enter new price: ");
+              double price = Double.parseDouble(scanner.nextLine());
+              System.out.print("Is available (true/false): ");
+              boolean available = Boolean.parseBoolean(scanner.nextLine());
+              out.println("UPDATE " + id + " " + name + " " + description + " " + price + " " + available);
+	    }
+
+	    private void deleteMenuItems(Scanner scanner) {
+	    	System.out.print("Enter ID of the menu item to delete: ");
+            int id = Integer.parseInt(scanner.nextLine());
+            out.println("DELETE " + id);
+	    }
+
+	    private void viewMenu() {
+	        out.println("COMMON_VIEW_MENU");
+	        try {
+	            String response;
+	            while ((response = in.readLine()) != null) {
+	                System.out.println(response);
+	                if (response.equals("END_OF_MENU")) {
+	                    break;
+	                }
+	            }
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+	    }
+
+}

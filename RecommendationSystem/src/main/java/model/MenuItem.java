@@ -57,12 +57,11 @@ public class MenuItem {
 
     @Override
     public String toString() {
-        return "MenuItem{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", price=" + price +
-                ", availability=" + availability +
-                '}';
+        return "MenuItem:\n" +
+               "    ID: " + id + "\n" +
+               "    Name: " + name + "\n" +
+               "    Description: " + description + "\n" +
+               "    Price: $" + String.format("%.2f", price) + "\n" +
+               "    Availability: " + (availability ? "Available" : "Not Available") + "\n";
     }
 }

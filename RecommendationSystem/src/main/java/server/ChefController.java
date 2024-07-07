@@ -1,0 +1,30 @@
+package server;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+public class ChefController {
+    private PrintWriter out;
+    private BufferedReader in;
+
+    public ChefController(PrintWriter out, BufferedReader in) {
+        this.out = out;
+        this.in = in;
+    }
+
+    public void processCommand(String command) throws IOException {
+        if (command.equals("Chef_View_Orders")) {
+		    out.println("Chef viewing orders...");
+		    // Implement view orders logic here
+		} else if (command.startsWith("Chef_Update_Order_Status")) {
+		    String[] parts = command.split("#");
+		    int orderId = Integer.parseInt(parts[1]);
+		    String status = parts[2];
+		    out.println("Updating order status...");
+		    // Implement update order status logic here
+		} else {
+		    out.println("Unknown chef command");
+		}
+    }
+}

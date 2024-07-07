@@ -1,0 +1,71 @@
+package Service;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.util.List;
+
+import model.MenuItem;
+
+public class AdminService {
+    private PrintWriter out;
+
+	private MenuService menuService = new MenuService();
+	
+	public void handleAddMenuItem(String operationDetails) throws IOException, SQLException {
+        String[] parts = operationDetails.split(" ");
+        if (parts.length == 4) {
+            String name = parts[0];
+            String description = parts[1];
+            double price = Double.parseDouble(parts[2]);
+            boolean available = Boolean.parseBoolean(parts[3]);
+
+            MenuItem menuItem = new MenuItem(0, name, description, price, available);
+            
+            menuService.addMenuItem(menuItem);
+            out.println("Menu item added successfully.");
+        } else {
+            out.println("Invalid ADD command format");
+        }
+    }
+
+    public void handleUpdateMenuItem(String operationDetails) throws IOException, SQLException {
+        String[] parts = operationDetails.split(" ");
+        if (parts.length == 5) {
+            int id = Integer.parseInt(parts[0]);
+            String name = parts[1];
+            String description = parts[2];
+            double price = Double.parseDouble(parts[3]);
+            boolean available = Boolean.parseBoolean(parts[4]);
+
+            MenuItem menuItem = new MenuItem(id, name, description, price, available);
+            menuService.updateMenuItem(menuItem);
+            out.println("Menu item updated successfully.");
+  
+        } else {
+            out.println("Invalid UPDATE command format");
+          
+        }
+    }
+
+    public void handleDeleteMenuItem(String operationDetails) throws IOException, SQLException {
+        try {
+            int id = Integer.parseInt(operationDetails);
+            menuService.deleteMenuItem(id);
+            out.println("Menu item deleted successfully.");
+           
+        } catch (NumberFormatException e) {
+            out.println("Invalid DELETE command format");
+           
+        }
+    }
+    
+    public void viewAllMenuItems() throws SQLException {
+        List<MenuItem> menuItems = menuService.getAllMenuItems();
+        for (MenuItem item : menuItems) {
+            out.println(item);
+        }
+    }
+
+
+}

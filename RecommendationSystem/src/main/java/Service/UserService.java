@@ -37,4 +37,20 @@ public class UserService {
         }
         return null;
     }
+    
+    public int getUserId(String username, String password) throws SQLException {
+        try (Connection connection = Database.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(
+                     "SELECT id FROM User WHERE name = ? AND password = ?" )) {
+            preparedStatement.setString(1, username);
+            preparedStatement.setString(2, password);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("id");
+                }
+            }
+        }
+        return -1;
+    }
 }

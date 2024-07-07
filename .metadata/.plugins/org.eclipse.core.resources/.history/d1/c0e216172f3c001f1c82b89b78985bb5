@@ -1,0 +1,50 @@
+package server;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+public class AdminController {
+    private PrintWriter out;
+    private BufferedReader in;
+
+    public AdminController(PrintWriter out, BufferedReader in) {
+        this.out = out;
+        this.in = in;
+    }
+
+    public void processCommand(String command) {
+        try {
+            if (command.startsWith("Admin_View")) {
+                out.println("Admin viewing menu...");
+                // Implement view logic here
+            } else if (command.startsWith("Admin_ADD")) {
+                String[] parts = command.split("#");
+                String name = parts[1];
+                String description = parts[2];
+                double price = Double.parseDouble(parts[3]);
+                boolean available = Boolean.parseBoolean(parts[4]);
+                out.println("Adding menu item...");
+                // Implement add logic here
+            } else if (command.startsWith("Admin_UPDATE")) {
+                String[] parts = command.split("#");
+                int id = Integer.parseInt(parts[1]);
+                String name = parts[2];
+                String description = parts[3];
+                double price = Double.parseDouble(parts[4]);
+                boolean available = Boolean.parseBoolean(parts[5]);
+                out.println("Updating menu item...");
+                // Implement update logic here
+            } else if (command.startsWith("Admin_DELETE")) {
+                String[] parts = command.split("#");
+                int id = Integer.parseInt(parts[1]);
+                out.println("Deleting menu item...");
+                // Implement delete logic here
+            } else {
+                out.println("Unknown admin command");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}

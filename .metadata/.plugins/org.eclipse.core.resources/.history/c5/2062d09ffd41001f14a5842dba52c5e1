@@ -26,7 +26,7 @@ public class EmployeeService {
                 int id = resultSet.getInt("id");
                 String message = resultSet.getString("message");
                 int itemId = resultSet.getInt("item_id");
-                String itemName = getMenuItemName(itemId);
+                String itemName = getMenuItemName(itemId); // Get item name
                 notifications.add(new Notification(id, message, itemId, itemName));
             }
         }
@@ -51,21 +51,8 @@ public class EmployeeService {
         String sql = "UPDATE dailymenuitem SET vote = vote + 1 WHERE item_id = ? AND date = CURDATE()";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, itemId);
-            statement.executeUpdate();
-        }
-    }
-
-    public void updateProfile(int userId, String preference, String spiceLevel, String cuisine, String sweetTooth) throws SQLException {
-        String sql = "INSERT INTO Profile (user_id, preference, spice_level, cuisine, sweet_tooth) VALUES (?, ?, ?, ?, ?) " +
-                     "ON DUPLICATE KEY UPDATE preference = VALUES(preference), spice_level = VALUES(spice_level), " +
-                     "cuisine = VALUES(cuisine), sweet_tooth = VALUES(sweet_tooth)";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, userId);
-            statement.setString(2, preference);
-            statement.setString(3, spiceLevel);
-            statement.setString(4, cuisine);
-            statement.setString(5, sweetTooth);
-            statement.executeUpdate();
+            int rowsUpdated = statement.executeUpdate();
+            System.out.println("Rows updated: " + rowsUpdated); // Logging
         }
     }
 

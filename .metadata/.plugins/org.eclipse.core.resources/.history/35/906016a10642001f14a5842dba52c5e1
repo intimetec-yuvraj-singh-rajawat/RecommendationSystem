@@ -152,3 +152,12 @@ public class RecommendationEngine {
     }
 }
 
+
+class NegationWords {
+    private static final List<String> NEGATION_WORDS = Arrays.asList(
+            "not", "no", "never", "none");
+
+    public static boolean contains(String word) {
+        return NEGATION_WORDS.contains(word);
+    }
+}

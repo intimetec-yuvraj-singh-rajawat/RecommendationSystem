@@ -27,7 +27,6 @@ public class CafeteriaClient {
 
             if ("LOGIN SUCCESSFUL".equals(response)) {
                 String roleId = in.readLine();
-                int userId = Integer.parseInt(in.readLine());
                 System.out.println("Role ID: " + roleId);
                 if ("Admin".equals(roleId)) {
                     AdminHandler adminHandler = new AdminHandler(socket, out, in);
@@ -37,7 +36,7 @@ public class CafeteriaClient {
                     chefHandler.showMenu();
                 } else if ("Employee".equals(roleId)) {
                     EmployeeHandler employeeHandler = new EmployeeHandler(socket, out, in);
-                    employeeHandler.showMenu(userId);
+                    employeeHandler.showMenu();
                 }
             } else {
                 System.out.println("Login failed. Please try again.");

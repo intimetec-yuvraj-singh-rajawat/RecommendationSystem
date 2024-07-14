@@ -1,0 +1,124 @@
+package recommendations;
+
+import java.util.*;
+import java.util.stream.Collectors;
+import model.Feedback;
+
+public class RecommendationEngine {
+    private List<Feedback> feedbacks;
+    private Map<Integer, Integer> itemFeedbackScores;
+    private Map<Integer, String> itemFeedbackSentiments;
+    private Map<Integer, Double> itemRatings;
+    private Map<Integer, Integer> itemRatingCounts;
+    private Map<Integer, Double> itemRatingScores;
+    private Map<Integer, String> itemIdToItemNameMap;
+    private Map<Integer, String> itemIdToCategoryMap;
+
+    public RecommendationEngine(List<Feedback> feedbacks) {
+        this.feedbacks = feedbacks;
+        this.itemFeedbackScores = new HashMap<>();
+        this.itemFeedbackSentiments = new HashMap<>();
+        this.itemRatings = new HashMap<>();
+        this.itemRatingCounts = new HashMap<>();
+        this.itemRatingScores = new HashMap<>();
+        this.itemIdToItemNameMap = new HashMap<>();
+        this.itemIdToCategoryMap = new HashMap<>();
+        analyzeFeedbacks();
+        calculateAverageRatings();
+    }
+
+    private void analyzeFeedbacks() {
+        for (Feedback feedback : feedbacks) {
+            int itemId = feedback.getItemId();
+            itemIdToItemNameMap.putIfAbsent(itemId, feedback.getItemName());
+            itemIdToCategoryMap.putIfAbsent(itemId, feedback.getFoodCategory());
+            itemFeedbackScores.putIfAbsent(itemId, 0);
+
+            String[] words = feedback.getComment().split("\\s+");
+            int positiveScore = 0;
+            int negativeScore = 0;
+            boolean negation = false;
+
+            for (String word : words) {
+                String lowerCaseWord = word.toLowerCase().replaceAll("[^a-zA-Z]", ""); 
+                if (NegationWords.contains(lowerCaseWord)) {
+                    negation = true;
+                    continue;
+                }
+
+                if (PositiveWords.contains(lowerCaseWord)) {
+                    if (negation) {
+                        negativeScore++;
+                        negation = false;
+                    } else {
+                        positiveScore++;
+                    }
+                } else if (NegativeWords.contains(lowerCaseWord)) {
+                    if (negation) {
+                        positiveScore++;
+                        negation = false;
+                    } else {
+                        negativeScore++;
+                    }
+                }
+            }
+
+            int score = positiveScore - negativeScore;
+            itemFeedbackScores.put(itemId, itemFeedbackScores.get(itemId) + score);
+        }
+
+        for (Map.Entry<Integer, Integer> entry : itemFeedbackScores.entrySet()) {
+            int itemId = entry.getKey();
+            int score = entry.getValue();
+            if (score > 0) {
+                itemFeedbackSentiments.put(itemId, "Positive");
+            } else if (score < 0) {
+                itemFeedbackSentiments.put(itemId, "Negative");
+            } else {
+                itemFeedbackSentiments.put(itemId, "Neutral");
+            }
+        }
+    }
+
+    private void calculateAverageRatings() {
+        for (Feedback feedback : feedbacks) {
+            int itemId = feedback.getItemId();
+            itemRatingScores.putIfAbsent(itemId, 0.0);
+            itemRatingCounts.putIfAbsent(itemId, 0);
+            itemRatingScores.put(itemId, itemRatingScores.get(itemId) + feedback.getRating());
+            itemRatingCounts.put(itemId, itemRatingCounts.get(itemId) + 1);
+        }
+
+        for (Map.Entry<Integer, Double> entry : itemRatingScores.entrySet()) {
+            int itemId = entry.getKey();
+            double totalScore = entry.getValue();
+            int count = itemRatingCounts.get(itemId);
+            itemRatings.put(itemId, totalScore / count);
+        }
+    }
+
+    public Map<Integer, String> getItemFeedbackSentiments() {
+        return itemFeedbackSentiments;
+    }
+
+    public Map<Integer, Double> getItemRatings() {
+        return itemRatings;
+    }
+
+    public Map<Integer, Double> getItemRatingsByCategory(String category, int numberOfItems) {
+        return itemRatings.entrySet().stream()
+            .filter(entry -> category.equals(itemIdToCategoryMap.get(entry.getKey())))
+            .sorted(Map.Entry.<Integer, Double>comparingByValue().reversed())
+            .limit(numberOfItems)
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    public Map<Integer, String> getItemFeedbackSentimentsByCategory(String category, int numberOfItems) {
+        return itemFeedbackSentiments.entrySet().stream()
+            .filter(entry -> category.equals(itemIdToCategoryMap.get(entry.getKey())))
+            .sorted(Map.Entry.<Integer, String>comparingByKey((itemId1, itemId2) -> 
+                    itemRatings.get(itemId2).compareTo(itemRatings.get(itemId1))))
+            .limit(numberOfItems)
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+}

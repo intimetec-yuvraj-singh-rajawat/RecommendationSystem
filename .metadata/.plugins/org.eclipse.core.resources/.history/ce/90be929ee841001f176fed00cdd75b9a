@@ -1,0 +1,49 @@
+package server;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.SQLException;
+
+import Service.EmployeeService;
+
+public class EmployeeController {
+    private PrintWriter out;
+    private BufferedReader in;
+    private EmployeeService employeeService;
+
+    public EmployeeController(PrintWriter out, BufferedReader in) throws SQLException {
+        this.out = out;
+        this.in = in;
+        this.employeeService = new EmployeeService();
+    }
+
+    public void processCommand(String command) throws IOException {
+        if (command.startsWith("Employee_UPDATE_PROFILE")) {
+            handleUpdateProfile(command);
+        }
+        // Other command handlers...
+    }
+
+    private void handleUpdateProfile(String command) throws IOException {
+        String[] parts = command.split(" ");
+        if (parts.length == 6) {
+            int userId = Integer.parseInt(parts[1]);
+            String preference = parts[2];
+            String spiceLevel = parts[3];
+            String cuisine = parts[4];
+            String sweetTooth = parts[5];
+
+            try {
+                employeeService.updateProfile(userId, preference, spiceLevel, cuisine, sweetTooth);
+                out.println("Profile updated successfully.");
+            } catch (SQLException e) {
+                out.println("Error updating profile: " + e.getMessage());
+            }
+            out.flush();
+        } else {
+            out.println("Invalid UPDATE_PROFILE command.");
+            out.flush();
+        }
+    }
+}

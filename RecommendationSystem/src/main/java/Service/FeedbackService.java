@@ -1,4 +1,5 @@
 package Service;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -7,27 +8,46 @@ import java.util.*;
 
 import db.Database;
 import model.Feedback;
+
 public class FeedbackService {
+	private Connection connection;
 	
-	public static List<Feedback> getFeedbacks(){
-		List<Feedback> feedbacks = new ArrayList<>();
-        try (Connection conn = Database.getConnection()) {
-            String query = "SELECT * FROM Feedback";
-            PreparedStatement stmt = conn.prepareStatement(query);
-            ResultSet rs = stmt.executeQuery();
+
+    public static List<Feedback> getFeedbacks() {
+        List<Feedback> feedbacks = new ArrayList<>();
+        String query = "SELECT f.id, f.comment, f.rating, f.date, f.item_id, f.user_id, m.name " +
+                       "FROM Feedback f " +
+                       "JOIN MenuItem m ON f.item_id = m.id";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+
             while (rs.next()) {
                 int id = rs.getInt("id");
                 String comment = rs.getString("comment");
                 int rating = rs.getInt("rating");
                 Date feedbackDate = rs.getDate("date");
-                int itemId = rs.getInt("item_Id");
-                String userId = rs.getString("user_Id");
-                feedbacks.add(new Feedback(id, comment, rating, feedbackDate, itemId, userId));
+                int itemId = rs.getInt("item_id");
+                String userId = rs.getString("user_id");
+                String itemName = rs.getString("name");
+
+                feedbacks.add(new Feedback(id, comment, rating, feedbackDate, itemId, itemName, userId));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return feedbacks;
     }
-		
+    
+    public void giveFeedback(int itemId, int rating, String comment) throws SQLException {
+    	this.connection = Database.getConnection();
+        String sql = "INSERT INTO Feedback (item_id, rating, comment, date) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, itemId);
+            statement.setInt(2, rating);
+            statement.setString(3, comment);
+            statement.setDate(4,  new java.sql.Date(System.currentTimeMillis()));
+            statement.executeUpdate();
+        }
+    }
 }

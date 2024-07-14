@@ -3,28 +3,53 @@ package server;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.SQLException;
+import Service.ChefService;
 
 public class ChefController {
     private PrintWriter out;
     private BufferedReader in;
+    private ChefService chefService;
 
     public ChefController(PrintWriter out, BufferedReader in) {
         this.out = out;
         this.in = in;
+        this.chefService = new ChefService();
     }
 
     public void processCommand(String command) throws IOException {
-        if (command.equals("Chef_View_Orders")) {
-		    out.println("Chef viewing orders...");
-		    // Implement view orders logic here
-		} else if (command.startsWith("Chef_Update_Order_Status")) {
-		    String[] parts = command.split("#");
-		    int orderId = Integer.parseInt(parts[1]);
-		    String status = parts[2];
-		    out.println("Updating order status...");
-		    // Implement update order status logic here
-		} else {
-		    out.println("Unknown chef command");
-		}
+        if (command.startsWith("Chef_VIEW")) {
+            try {
+                chefService.viewAllMenuItems(out);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (command.startsWith("Chef_RECOMMEND")) {
+            String[] parts = command.split(" ");
+            if (parts.length >= 3) {
+                try {
+                    String mealCategory = parts[1];
+                    int numberOfItems = Integer.parseInt(parts[2]);
+                    if (numberOfItems > 0) {
+                        chefService.seeRecommendedItems(mealCategory, numberOfItems, out);
+                    } else {
+                        out.println("Invalid number of items specified.");
+                    }
+                } catch (NumberFormatException e) {
+                    out.println("Invalid command format. Use: Chef_RECOMMEND <mealCategory> <number>");
+                }
+            } else {
+                out.println("Invalid command format. Use: Chef_RECOMMEND <mealCategory> <number>");
+            }
+        } else if (command.startsWith("Chef_ROLLOUT")) {
+            try {
+                chefService.rollOutItems(command.split(" ")[1], out);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            out.println("Unknown chef command");
+        }
+        out.flush();
     }
 }

@@ -1,0 +1,28 @@
+package Service;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import db.Database;
+import model.Feedback;
+
+public class EmployeeService {
+    private Connection connection;
+
+    public EmployeeService() throws SQLException {
+        this.connection = Database.getConnection();
+    }
+
+    public void giveFeedback(int userId, int itemId, int rating, String comment) throws SQLException {
+        String sql = "INSERT INTO feedback (user_id, item_id, rating, comment, date) VALUES (?, ?, ?, ?, CURDATE())";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            statement.setInt(2, itemId);
+            statement.setInt(3, rating);
+            statement.setString(4, comment);
+            statement.executeUpdate();
+        }
+    }
+
+    // Other existing methods...
+}

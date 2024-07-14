@@ -1,0 +1,82 @@
+package server;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+
+public class ChefHandler implements Runnable {
+    private Socket clientSocket;
+    private PrintWriter out;
+    private BufferedReader in;
+    private ChefController chefController;
+
+    public ChefHandler(Socket clientSocket) throws IOException {
+        this.clientSocket = clientSocket;
+        this.out = new PrintWriter(clientSocket.getOutputStream(), true);
+        this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        this.chefController = new ChefController(out, in);
+    }
+
+    @Override
+    public void run() {
+        try {
+            out.println("Select an option:");
+            out.println("1. View all menu items");
+            out.println("2. See recommended items");
+            out.println("3. Roll out item(s)");
+            out.println("4. Logout");
+
+            String command;
+            while ((command = in.readLine()) != null) {
+                switch (command) {
+                    case "1":
+                        chefController.processCommand("Chef_VIEW");
+                        break;
+                    case "2":
+                        out.println("Enter the number of breakfast items to recommend:");
+                        int breakfastCount = Integer.parseInt(in.readLine());
+                        out.println("Enter the number of lunch items to recommend:");
+                        int lunchCount = Integer.parseInt(in.readLine());
+                        out.println("Enter the number of dinner items to recommend:");
+                        int dinnerCount = Integer.parseInt(in.readLine());
+
+                        chefController.processCommand("Chef_RECOMMEND Breakfast " + breakfastCount);
+                        chefController.processCommand("Chef_RECOMMEND Lunch " + lunchCount);
+                        chefController.processCommand("Chef_RECOMMEND Dinner " + dinnerCount);
+                        break;
+                    case "3":
+                        out.println("Enter the item IDs to roll out (comma-separated):");
+                        String itemIdsStr = in.readLine();
+                        chefController.processCommand("Chef_ROLLOUT " + itemIdsStr);
+                        break;
+                    case "4":
+                        out.println("Logout successful");
+                        return;
+                    default:
+                        out.println("Invalid option. Please select a valid option.");
+                        break;
+                }
+                out.println("Select an option:");
+                out.println("1. View all menu items");
+                out.println("2. See recommended items");
+                out.println("3. Roll out item(s)");
+                out.println("4. Logout");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NumberFormatException e) {
+            out.println("Invalid input. Please enter a valid number.");
+            out.flush();
+        } finally {
+            try {
+                in.close();
+                out.close();
+                clientSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}

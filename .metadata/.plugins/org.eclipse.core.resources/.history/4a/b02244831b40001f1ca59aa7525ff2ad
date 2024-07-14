@@ -1,0 +1,181 @@
+package recommendations;
+
+import java.util.*;
+
+import model.Feedback;
+
+public class RecommendationEngine {
+    private List<Feedback> feedbacks;
+    private Map<Integer, Integer> itemFeedbackScores;
+    private Map<Integer, String> itemFeedbackSentiments;
+    private Map<Integer, Double> itemRatings;
+    private Map<Integer, Integer> itemRatingCounts;
+    private Map<Integer, Double> itemRatingScores;
+    private Map<Integer, String> itemIdToItemNameMap;
+
+    public RecommendationEngine(List<Feedback> feedbacks) {
+        this.feedbacks = feedbacks;
+        this.itemFeedbackScores = new HashMap<>();
+        this.itemFeedbackSentiments = new HashMap<>();
+        this.itemRatings = new HashMap<>();
+        this.itemRatingCounts = new HashMap<>();
+        this.itemRatingScores = new HashMap<>();
+        this.itemIdToItemNameMap = new HashMap<>();
+        analyzeFeedbacks();
+        calculateAverageRatings();
+    }
+
+    private void analyzeFeedbacks() {
+        for (Feedback feedback : feedbacks) {
+            int itemId = feedback.getItemId();
+            itemIdToItemNameMap.putIfAbsent(itemId, feedback.getItemName());
+            itemFeedbackScores.putIfAbsent(itemId, 0);
+
+            String[] words = feedback.getComment().split("\\s+");
+            int positiveScore = 0;
+            int negativeScore = 0;
+            boolean negation = false;
+
+            for (String word : words) {
+                String lowerCaseWord = word.toLowerCase().replaceAll("[^a-zA-Z]", "");
+                if (NegationWords.contains(lowerCaseWord)) {
+                    negation = true;
+                    continue;
+                }
+
+                if (PositiveWords.contains(lowerCaseWord)) {
+                    if (negation) {
+                        negativeScore++;
+                        negation = false;
+                    } else {
+                        positiveScore++;
+                    }
+                } else if (NegativeWords.contains(lowerCaseWord)) {
+                    if (negation) {
+                        positiveScore++;
+                        negation = false;
+                    } else {
+                        negativeScore++;
+                    }
+                }
+            }
+
+            int score = positiveScore - negativeScore;
+            itemFeedbackScores.put(itemId, itemFeedbackScores.get(itemId) + score);
+        }
+
+        for (Map.Entry<Integer, Integer> entry : itemFeedbackScores.entrySet()) {
+            int itemId = entry.getKey();
+            int score = entry.getValue();
+            if (score > 0) {
+                itemFeedbackSentiments.put(itemId, "Positive");
+            } else if (score < 0) {
+                itemFeedbackSentiments.put(itemId, "Negative");
+            } else {
+                itemFeedbackSentiments.put(itemId, "Neutral");
+            }
+        }
+    }
+
+    private void calculateAverageRatings() {
+        for (Feedback feedback : feedbacks) {
+            int itemId = feedback.getItemId();
+            itemRatingScores.putIfAbsent(itemId, 0.0);
+            itemRatingCounts.putIfAbsent(itemId, 0);
+            itemRatingScores.put(itemId, itemRatingScores.get(itemId) + feedback.getRating());
+            itemRatingCounts.put(itemId, itemRatingCounts.get(itemId) + 1);
+        }
+
+        for (Map.Entry<Integer, Double> entry : itemRatingScores.entrySet()) {
+            int itemId = entry.getKey();
+            double totalScore = entry.getValue();
+            int count = itemRatingCounts.get(itemId);
+            itemRatings.put(itemId, totalScore / count);
+        }
+    }
+
+    public List<Integer> getRecommendedItems(String mealCategory, int numberOfItems) {
+        List<Integer> recommendedItems = new ArrayList<>();
+
+        List<Map.Entry<Integer, Double>> sortedItems = new ArrayList<>(itemRatings.entrySet());
+        sortedItems.sort(Map.Entry.comparingByValue(Comparator.reverseOrder()));
+
+        int count = 0;
+        for (Map.Entry<Integer, Double> entry : sortedItems) {
+            int itemId = entry.getKey();
+            String category = itemIdToItemNameMap.containsKey(itemId) ? itemIdToItemNameMap.get(itemId) : "Unknown";
+
+            if (category.toLowerCase().contains(mealCategory.toLowerCase())) {
+                recommendedItems.add(itemId);
+                count++;
+            }
+
+            if (count >= numberOfItems) {
+                break;
+            }
+        }
+
+        return recommendedItems;
+    }
+
+    public Map<Integer, String> getItemFeedbackSentiments() {
+        return itemFeedbackSentiments;
+    }
+
+    public Map<Integer, Double> getItemRatings() {
+        return itemRatings;
+    }
+
+    // PositiveWords, NegativeWords, NegationWords classes are unchanged
+}
+
+
+class PositiveWords {
+    private static final List<String> POSITIVE_WORDS = Arrays.asList(
+            "delicious", "tasty", "savory", "flavorful", "appetizing",
+            "delectable", "scrumptious", "yummy", "mouthwatering", "luscious",
+            "succulent", "exquisite", "heavenly", "tempting", "gourmet", "rich",
+            "satisfying", "juicy", "nutritious", "fresh", "aromatic", "zesty",
+            "flavor-packed", "divine", "tantalizing", "lip-smacking", "indulgent",
+            "gratifying", "delightful", "palatable", "bursting with flavor",
+            "sumptuous", "decadent", "mouth-filling", "melt-in-your-mouth", "irresistible",
+            "crispy", "tender", "velvety", "bright", "fragrant", "clean", "comforting",
+            "homemade", "authentic", "freshly baked", "wholesome", "energizing",
+            "nourishing", "excellent", "outstanding", "superb", "fantastic", "brilliant",
+            "exceptional", "impressive", "marvelous", "remarkable", "wonderful",
+            "great", "amazing", "terrific", "fabulous", "awesome", "stellar", "extraordinary",
+            "magnificent", "perfect", "commendable", "good");
+
+    public static boolean contains(String word) {
+        return POSITIVE_WORDS.contains(word);
+    }
+}
+
+class NegativeWords {
+    private static final List<String> NEGATIVE_WORDS = Arrays.asList(
+            "poor", "disappointing", "unsatisfactory", "inadequate", "subpar",
+            "mediocre", "lacking", "unacceptable", "deficient", "inferior", "weak",
+            "flawed", "ineffective", "insufficient", "dismal", "unimpressive",
+            "below standard", "troubling", "frustrating", "incomplete", "bland",
+            "tasteless", "soggy", "stale", "rancid", "greasy", "unappetizing",
+            "mushy", "watery", "overcooked", "undercooked", "burnt", "sour",
+            "rotten", "spoiled", "unpleasant", "bitter", "salty", "dry", "tough",
+            "chewy", "gritty", "fatty", "artificial", "frozen", "processed", "stodgy",
+            "heavy", "unhealthy", "unpalatable", "flat", "stagnant", "insipid",
+            "disappointing", "mismatched", "unbalanced", "off-putting", "uninspired",
+            "repulsive", "sickening", "stuffy", "stifling", "unappealing", "stinky",
+            "dull", "distasteful", "unimaginative", "fake", "lacking", "ordinary", "bad");
+
+    public static boolean contains(String word) {
+        return NEGATIVE_WORDS.contains(word);
+    }
+}
+
+class NegationWords {
+    private static final List<String> NEGATION_WORDS = Arrays.asList(
+            "not", "no", "never", "none");
+
+    public static boolean contains(String word) {
+        return NEGATION_WORDS.contains(word);
+    }
+}

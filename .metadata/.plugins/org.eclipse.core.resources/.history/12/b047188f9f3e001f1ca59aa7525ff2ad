@@ -1,0 +1,53 @@
+package Service;
+
+import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+
+import model.Feedback;
+import model.MenuItem;
+import recommendations.RecommendationEngine;
+
+public class ChefService {
+    private MenuService menuService = new MenuService();
+    private FeedbackService feedbackService = new FeedbackService();
+    private RecommendationEngine recommendationEngine;
+
+    public void viewAllMenuItems(PrintWriter out) throws SQLException {
+        List<MenuItem> menuItems = menuService.getAllMenuItems();
+        for (MenuItem item : menuItems) {
+            out.println(item);
+        }
+        out.println("END_OF_ITEMS");
+        out.flush();
+    }
+
+    public void seeRecommendedItems(PrintWriter out) {
+        List<Feedback> feedbacks = feedbackService.getFeedbacks();
+        recommendationEngine = new RecommendationEngine(feedbacks);
+
+        Map<Integer, Double> itemRatings = recommendationEngine.getItemRatings();
+        Map<Integer, String> itemFeedbackSentiments = recommendationEngine.getItemFeedbackSentiments();
+
+        for (Map.Entry<Integer, Double> entry : itemRatings.entrySet()) {
+            Integer itemId = entry.getKey();
+            Double rating = entry.getValue();
+            String sentiment = itemFeedbackSentiments.get(itemId);
+            out.println(itemId + " = Rating: " + String.format("%.2f", rating) + ", Sentiment: " + sentiment);
+        }
+
+        out.flush();
+    }
+
+    public void rollOutItem(String itemIdStr, PrintWriter out) throws SQLException {
+        try {
+            int itemId = Integer.parseInt(itemIdStr);
+            // menuService.rollOutItem(itemId);  // Assume this method exists in MenuService
+            out.println("Item rolled out successfully.");
+        } catch (NumberFormatException e) {
+            out.println("Invalid item ID");
+        }
+        out.flush();
+    }
+}

@@ -1,0 +1,56 @@
+package Service;
+
+import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.util.List;
+
+import model.Feedback;
+import model.MenuItem;
+import recommendations.RecommendationEngine;
+
+public class ChefService {
+    private MenuService menuService = new MenuService();
+    private RecommendationEngine recommendationEngine;
+
+    public ChefService() {
+        // Assume feedbacks are retrieved from the database or some data source
+        List<Feedback> feedbacks = getFeedbacks();
+        this.recommendationEngine = new RecommendationEngine(feedbacks);
+    }
+
+    public void viewAllMenuItems(PrintWriter out) throws SQLException {
+        List<MenuItem> menuItems = menuService.getAllMenuItems();
+        for (MenuItem item : menuItems) {
+            out.println(item);
+        }
+        out.println("END_OF_ITEMS");
+        out.flush();
+    }
+
+    public void seeRecommendedItems(PrintWriter out) {
+        for (Integer itemId : RecommendationEngine.itemRatings.keySet()) {
+            out.println("Item ID: " + itemId + " Rating: " + RecommendationEngine.itemRatings.get(itemId));
+        }
+        out.println("END_OF_ITEMS");
+        out.flush();
+    }
+
+    public void rollOutItem(String itemIdStr, PrintWriter out) throws SQLException {
+        try {
+            int itemId = Integer.parseInt(itemIdStr);
+            menuService.rollOutItem(itemId);  // Assume this method exists in MenuService
+            out.println("Item rolled out successfully.");
+        } catch (NumberFormatException e) {
+            out.println("Invalid item ID");
+        }
+    }
+
+    private List<Feedback> getFeedbacks() {
+        // Retrieve feedbacks from data source
+        return List.of(
+            new Feedback(1, 5, "Excellent"),
+            new Feedback(2, 3, "Mediocre"),
+            // Add more feedbacks
+        );
+    }
+}

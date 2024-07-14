@@ -28,6 +28,14 @@ public class MenuService {
         }
         return menuItems;
     }
+    public List<String> getAllMenuItemsFormatted() throws SQLException {
+        List<String> formattedMenuItems = new ArrayList<>();
+        List<MenuItem> menuItems = getAllMenuItems();
+        for (MenuItem item : menuItems) {
+            formattedMenuItems.add(item.toString());  // Assuming MenuItem has a meaningful toString implementation
+        }
+        return formattedMenuItems;
+    }
 
     public MenuItem getMenuItemById(int id) throws SQLException {
         String sql = "SELECT * FROM MenuItem WHERE id = ?";

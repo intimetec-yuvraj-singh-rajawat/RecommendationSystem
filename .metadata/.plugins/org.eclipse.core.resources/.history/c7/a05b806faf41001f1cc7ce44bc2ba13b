@@ -1,0 +1,40 @@
+package server;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.util.List;
+
+import Service.EmployeeService;
+import model.Notification;
+
+public class EmployeeController {
+    private PrintWriter out;
+    private BufferedReader in;
+    private EmployeeService employeeService;
+
+    public EmployeeController(PrintWriter out, BufferedReader in) throws SQLException {
+        this.out = out;
+        this.in = in;
+        this.employeeService = new EmployeeService();
+    }
+
+    public void processCommand(String inputLine) throws IOException, SQLException {
+        if (inputLine.startsWith("Employee_VIEW_NOTIFICATIONS")) {
+            viewNotifications();
+        } else {
+            out.println("Unknown command");
+            out.flush();
+        }
+    }
+
+    private void viewNotifications() throws SQLException {
+        List<Notification> notifications = employeeService.getNotifications();
+        for (Notification notification : notifications) {
+            out.println(notification.toString());
+        }
+        out.println("END_OF_NOTIFICATIONS");
+        out.flush();
+    }
+}

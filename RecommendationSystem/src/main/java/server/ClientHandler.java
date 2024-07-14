@@ -14,6 +14,7 @@ public class ClientHandler implements Runnable {
     private final Socket clientSocket;
     private AdminController adminController;
     private ChefController chefController;
+    private EmployeeController employeeController;
     private final UserService userService;
     private int userId;
 
@@ -34,6 +35,7 @@ public class ClientHandler implements Runnable {
                     handleLogin(inputLine, out);
                 } else if (inputLine.startsWith("LOGOUT")) {
                     handleLogout(out);
+                    break; // Exit loop on logout
                 } else if (inputLine.startsWith("Admin_")) {
                     if (adminController == null) {
                         adminController = new AdminController(out, in);
@@ -44,6 +46,11 @@ public class ClientHandler implements Runnable {
                         chefController = new ChefController(out, in);
                     }
                     chefController.processCommand(inputLine);
+                } else if (inputLine.startsWith("Employee_")) {
+                    if (employeeController == null) {
+                        employeeController = new EmployeeController(out, in);
+                    }
+                    employeeController.processCommand(inputLine);
                 } else {
                     out.println("Unknown command");
                     out.flush();
@@ -85,7 +92,13 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private void handleLogout(PrintWriter out) throws SQLException {
-        // Implement logout handling logic
+    private void handleLogout(PrintWriter out) {
+        try {
+            out.println("LOGOUT_SUCCESSFUL");
+            out.flush();
+            clientSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

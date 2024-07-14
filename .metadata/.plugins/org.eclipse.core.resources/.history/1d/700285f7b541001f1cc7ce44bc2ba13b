@@ -1,0 +1,57 @@
+package server;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.util.List;
+
+import Service.EmployeeService;
+import model.MenuItem;
+
+public class EmployeeController {
+    private PrintWriter out;
+    private BufferedReader in;
+    private EmployeeService employeeService;
+    private int userId;
+
+    public EmployeeController(PrintWriter out, BufferedReader in, int userId) throws SQLException {
+        this.out = out;
+        this.in = in;
+        this.employeeService = new EmployeeService();
+        this.userId = userId;
+    }
+
+    public void processCommand(String command) throws IOException, SQLException {
+        if (command.equals("Employee_VIEW_NOTIFICATIONS")) {
+            List<Notification> notifications = employeeService.getNotifications();
+            for (Notification notification : notifications) {
+                out.println(notification);
+            }
+            out.println("END_OF_NOTIFICATIONS");
+            out.flush();
+        } else if (command.equals("Employee_VIEW_ROLLED_OUT_ITEMS")) {
+            List<String> items = employeeService.getRolledOutItemsForToday();
+            for (String item : items) {
+                out.println(item);
+            }
+            out.println("END_OF_ROLLED_OUT_ITEMS");
+            out.flush();
+        } else if (command.equals("Employee_VIEW_MENU")) {
+            List<MenuItem> menu = employeeService.getAllMenuItems();
+            for (MenuItem menuItem : menu) {
+                out.println(menuItem);
+            }
+            out.println("END_OF_MENU");
+            out.flush();
+        } else if (command.startsWith("Employee_GIVE_FEEDBACK")) {
+            String[] parts = command.split(" ");
+            int itemId = Integer.parseInt(parts[1]);
+            int rating = Integer.parseInt(parts[2]);
+            String comment = parts[3].replace("_", " ");
+            employeeService.giveFeedback(userId, itemId, rating, comment);
+            out.println("Feedback submitted successfully.");
+            out.flush();
+        }
+    }
+}

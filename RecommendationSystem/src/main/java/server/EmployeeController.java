@@ -30,7 +30,7 @@ public class EmployeeController {
         if (command.startsWith("Employee_VIEW_NOTIFICATIONS")) {
             handleViewNotifications();
         } else if (command.startsWith("Employee_VIEW_ROLLED_OUT_ITEMS")) {
-            handleViewRolledOutItems();
+            handleViewRolledOutItems(command);
         } else if (command.startsWith("Employee_VOTE")) {
             handleVote(command);
         } else if (command.startsWith("Employee_VIEW_FULL_MENU")) {
@@ -55,16 +55,23 @@ public class EmployeeController {
         }
     }
 
-    private void handleViewRolledOutItems() throws IOException {
-        try {
-            List<String> rolledOutItems = employeeService.getRolledOutItemsForToday();
-            for (String item : rolledOutItems) {
-                out.println(item);
+    private void handleViewRolledOutItems(String command) throws IOException {
+        String[] parts = command.split(" ");
+        if (parts.length == 2) {
+            int userId = Integer.parseInt(parts[1]);
+            try {
+                List<String> rolledOutItems = employeeService.getRolledOutItemsForToday(userId);
+                for (String item : rolledOutItems) {
+                    out.println(item);
+                }
+                out.println("END_OF_ROLLED_OUT_ITEMS");
+                out.flush();
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-            out.println("END_OF_ROLLED_OUT_ITEMS");
+        } else {
+            out.println("Invalid VIEW_ROLLED_OUT_ITEMS command.");
             out.flush();
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -118,7 +125,7 @@ public class EmployeeController {
     }
 
     private void handleUpdateProfile(String command) throws IOException {
-        String[] parts = command.split(" ", 6);
+        String[] parts = command.split("#", 6);
         if (parts.length == 6) {
             int userId = Integer.parseInt(parts[1]);
             String preference = parts[2];

@@ -76,7 +76,7 @@ public class EmployeeHandler {
         System.out.println("4) Do you have a sweet tooth? - Yes, No");
         String sweetTooth = scanner.nextLine();
 
-        out.println("Employee_UPDATE_PROFILE " + userId + " " + preference + " " + spiceLevel + " " + cuisine + " " + sweetTooth);
+        out.println("Employee_UPDATE_PROFILE " + "#"+ userId + "#" + preference + "#" + spiceLevel + "#" + cuisine + "#" + sweetTooth);
         out.flush();
         System.out.println(in.readLine()); // Read the result
     }
@@ -88,7 +88,7 @@ public class EmployeeHandler {
     }
 
     private void voteForRolledOutItems() throws IOException {
-        out.println("Employee_VIEW_ROLLED_OUT_ITEMS");
+        out.println("Employee_VIEW_ROLLED_OUT_ITEMS " + userId);
         out.flush();
         
         System.out.println("Today's Rolled Out Items:");

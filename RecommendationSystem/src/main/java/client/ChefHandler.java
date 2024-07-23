@@ -31,7 +31,7 @@ public class ChefHandler {
             System.out.println("6. Delete Discard Menu Item(s)");
             System.out.println("7. Logout");
             choice = scanner.nextInt();
-            scanner.nextLine(); // Consume the newline after nextInt()
+            scanner.nextLine(); 
             handleUserChoice(choice);
         } while (choice != 7);
 

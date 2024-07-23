@@ -32,7 +32,7 @@ public class EmployeeHandler {
             System.out.println("7. Update Profile");
             System.out.println("8. Logout");
             choice = scanner.nextInt();
-            scanner.nextLine(); // Consume the newline after nextInt()
+            scanner.nextLine(); 
             handleUserChoice(choice, userId);
         } while (choice != 8);
 
@@ -92,7 +92,7 @@ public class EmployeeHandler {
     private void voteForItem() throws IOException {
         System.out.print("Enter Menu Item ID: ");
         int itemId = scanner.nextInt();
-        scanner.nextLine(); // Consume newline
+        scanner.nextLine(); 
         out.println("Employee_VOTE " + itemId);
         out.flush();
         System.out.println(in.readLine());
@@ -110,11 +110,11 @@ public class EmployeeHandler {
     private void giveFeedback() throws IOException {
         System.out.print("Enter Menu Item ID: ");
         int itemId = scanner.nextInt();
-        scanner.nextLine(); // Consume newline
+        scanner.nextLine(); 
 
         System.out.print("Enter Rating (1-5): ");
         int rating = scanner.nextInt();
-        scanner.nextLine(); // Consume newline
+        scanner.nextLine(); 
 
         System.out.print("Enter Comment: ");
         String comment = scanner.nextLine();
@@ -127,7 +127,7 @@ public class EmployeeHandler {
     private void submitDetailedFeedback() throws IOException {
         System.out.print("Enter Menu Item ID: ");
         int itemId = scanner.nextInt();
-        scanner.nextLine(); // Consume newline
+        scanner.nextLine(); 
 
         System.out.print("Q1. What didn’t you like about this item? ");
         String question1 = scanner.nextLine();

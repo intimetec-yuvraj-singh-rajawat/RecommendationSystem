@@ -15,9 +15,12 @@ import model.Notification;
 
 public class EmployeeService {
     private Connection connection;
+    private DetailedFeedbackService detailedFeedbackService;
 
     public EmployeeService() throws SQLException {
         this.connection = Database.getConnection();
+        this.detailedFeedbackService = new DetailedFeedbackService();
+
     }
 
     public List<Notification> getNotifications() throws SQLException {
@@ -135,5 +138,16 @@ public class EmployeeService {
             }
         }
         return null;
+    }
+    
+    public void submitDetailedFeedback(int itemId, String ques1, String ques2, String ques3) throws SQLException {
+        String sql = "INSERT INTO detailed_feedback (item_id, ques1, ques2, ques3) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, itemId);
+            statement.setString(2, ques1);
+            statement.setString(3, ques2);
+            statement.setString(4, ques3);
+            statement.executeUpdate();
+        }
     }
 }

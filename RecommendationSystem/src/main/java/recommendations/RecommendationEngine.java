@@ -13,34 +13,34 @@ public class RecommendationEngine {
     private Map<Integer, String> itemIdToItemNameMap;
 
     private static final Set<String> POSITIVE_WORDS = new HashSet<>(Arrays.asList(
-    		"delicious", "tasty", "savory", "flavorful", "appetizing",
-            "delectable", "scrumptious", "yummy", "mouthwatering", "luscious",
-            "succulent", "exquisite", "heavenly", "tempting", "gourmet", "rich",
-            "satisfying", "juicy", "nutritious", "fresh", "aromatic", "zesty",
-            "flavor-packed", "divine", "tantalizing", "lip-smacking", "indulgent",
-            "gratifying", "delightful", "palatable", "bursting with flavor",
-            "sumptuous", "decadent", "mouth-filling", "melt-in-your-mouth", "irresistible",
-            "crispy", "tender", "velvety", "bright", "fragrant", "clean", "comforting",
-            "homemade", "authentic", "freshly baked", "wholesome", "energizing",
-            "nourishing", "excellent", "outstanding", "superb", "fantastic", "brilliant",
-            "exceptional", "impressive", "marvelous", "remarkable", "wonderful",
-            "great", "amazing", "terrific", "fabulous", "awesome", "stellar", "extraordinary",
-            "magnificent", "perfect", "commendable", "good"
+        "delicious", "tasty", "savory", "flavorful", "appetizing", "delectable", 
+        "scrumptious", "yummy", "mouthwatering", "luscious", "succulent", 
+        "exquisite", "heavenly", "tempting", "gourmet", "rich", "satisfying", 
+        "juicy", "nutritious", "fresh", "aromatic", "zesty", "flavor-packed", 
+        "divine", "tantalizing", "lip-smacking", "indulgent", "gratifying", 
+        "delightful", "palatable", "bursting with flavor", "sumptuous", "decadent", 
+        "mouth-filling", "melt-in-your-mouth", "irresistible", "crispy", "tender", 
+        "velvety", "bright", "fragrant", "clean", "comforting", "homemade", 
+        "authentic", "freshly baked", "wholesome", "energizing", "nourishing", 
+        "excellent", "outstanding", "superb", "fantastic", "brilliant", "exceptional", 
+        "impressive", "marvelous", "remarkable", "wonderful", "great", "amazing", 
+        "terrific", "fabulous", "awesome", "stellar", "extraordinary", 
+        "magnificent", "perfect", "commendable", "good"
     ));
 
     private static final Set<String> NEGATIVE_WORDS = new HashSet<>(Arrays.asList(
-    		 "poor", "disappointing", "unsatisfactory", "inadequate", "subpar",
-             "mediocre", "lacking", "unacceptable", "deficient", "inferior", "weak",
-             "flawed", "ineffective", "insufficient", "dismal", "unimpressive",
-             "below standard", "troubling", "frustrating", "incomplete", "bland",
-             "tasteless", "soggy", "stale", "rancid", "greasy", "unappetizing",
-             "mushy", "watery", "overcooked", "undercooked", "burnt", "sour",
-             "rotten", "spoiled", "unpleasant", "bitter", "salty", "dry", "tough",
-             "chewy", "gritty", "fatty", "artificial", "frozen", "processed", "stodgy",
-             "heavy", "unhealthy", "unpalatable", "flat", "stagnant", "insipid",
-             "disappointing", "mismatched", "unbalanced", "off-putting", "uninspired",
-             "repulsive", "sickening", "stuffy", "stifling", "unappealing", "stinky",
-             "dull", "distasteful", "unimaginative", "fake", "lacking", "ordinary", "bad"
+        "poor", "disappointing", "unsatisfactory", "inadequate", "subpar", 
+        "mediocre", "lacking", "unacceptable", "deficient", "inferior", "weak", 
+        "flawed", "ineffective", "insufficient", "dismal", "unimpressive", 
+        "below standard", "troubling", "frustrating", "incomplete", "bland", 
+        "tasteless", "soggy", "stale", "rancid", "greasy", "unappetizing", 
+        "mushy", "watery", "overcooked", "undercooked", "burnt", "sour", 
+        "rotten", "spoiled", "unpleasant", "bitter", "salty", "dry", "tough", 
+        "chewy", "gritty", "fatty", "artificial", "frozen", "processed", "stodgy", 
+        "heavy", "unhealthy", "unpalatable", "flat", "stagnant", "insipid", 
+        "disappointing", "mismatched", "unbalanced", "off-putting", "uninspired", 
+        "repulsive", "sickening", "stuffy", "stifling", "unappealing", "stinky", 
+        "dull", "distasteful", "unimaginative", "fake", "lacking", "ordinary", "bad"
     ));
 
     private static final Set<String> NEGATION_WORDS = new HashSet<>(Arrays.asList(
@@ -149,6 +149,18 @@ public class RecommendationEngine {
 
     public Map<Integer, String> getItemFeedbackSentiments() {
         return itemFeedbackSentiments;
+    }
+
+    public List<Integer> getLowRatedItems() {
+        List<Integer> lowRatedItems = new ArrayList<>();
+        for (Map.Entry<Integer, Double> entry : itemRatings.entrySet()) {
+            if (entry.getValue() < 2.0) {
+               System.out.println(entry.getKey());
+               System.out.println(entry.getValue());
+                lowRatedItems.add(entry.getKey());
+            }
+        }
+        return lowRatedItems;
     }
 }
 

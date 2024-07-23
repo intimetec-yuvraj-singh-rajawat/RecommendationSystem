@@ -26,11 +26,14 @@ public class ChefHandler {
             System.out.println("1. View all menu items");
             System.out.println("2. See recommended items");
             System.out.println("3. Roll out item(s)");
-            System.out.println("4. Logout");
+            System.out.println("4. Request detailed feedback");
+            System.out.println("5. View Discard Menu");
+            System.out.println("6. Delete Discard Menu Item(s)");
+            System.out.println("7. Logout");
             choice = scanner.nextInt();
             scanner.nextLine(); // Consume the newline after nextInt()
             handleUserChoice(choice);
-        } while (choice != 4);
+        } while (choice != 7);
 
         System.out.println("Logged out. Goodbye!");
     }
@@ -47,6 +50,15 @@ public class ChefHandler {
                 rollOutItems();
                 break;
             case 4:
+                requestDetailedFeedback();
+                break;
+            case 5:
+                discardMenuItems();
+                break;
+            case 6:
+                deleteDiscardMenuItems();
+                break;
+            case 7:
                 logout();
                 break;
             default:
@@ -57,7 +69,7 @@ public class ChefHandler {
 
     private void viewMenu() {
         out.println("Chef_VIEW");
-        out.flush(); // Ensure the command is sent immediately
+        out.flush();
         receiveAndPrintMultipleResponses();
     }
 
@@ -68,18 +80,18 @@ public class ChefHandler {
         int lunchItems = scanner.nextInt();
         System.out.print("Enter the number of dinner items to recommend: ");
         int dinnerItems = scanner.nextInt();
-        scanner.nextLine(); // Consume the newline after nextInt()
+        scanner.nextLine();
 
         out.println("Chef_RECOMMEND breakfast " + breakfastItems);
-        out.flush(); // Ensure the command is sent immediately
+        out.flush();
         receiveAndPrintRecommendations("Breakfast");
 
         out.println("Chef_RECOMMEND lunch " + lunchItems);
-        out.flush(); // Ensure the command is sent immediately
+        out.flush();
         receiveAndPrintRecommendations("Lunch");
 
         out.println("Chef_RECOMMEND dinner " + dinnerItems);
-        out.flush(); // Ensure the command is sent immediately
+        out.flush();
         receiveAndPrintRecommendations("Dinner");
     }
 
@@ -87,7 +99,35 @@ public class ChefHandler {
         System.out.print("Enter IDs of the menu items to roll out (comma separated): ");
         String ids = scanner.nextLine();
         out.println("Chef_ROLLOUT " + ids);
-        out.flush(); // Ensure the command is sent immediately
+        out.flush();
+        receiveAndPrintSingleResponse();
+    }
+
+    private void requestDetailedFeedback() {
+        System.out.print("Enter the ID of the menu item to request feedback for: ");
+        int itemId = scanner.nextInt();
+        scanner.nextLine(); 
+        System.out.print("Enter the name of the menu item: ");
+        String itemName = scanner.nextLine();
+
+        out.println("Chef_REQUEST_DETAILED_FEEDBACK " +"#"+ itemId + "#" + itemName);
+        out.flush();
+        receiveAndPrintSingleResponse();
+    }
+
+    private void discardMenuItems() throws IOException {
+        out.println("Chef_Discard_Menu");
+        String inputLine;
+        while (!(inputLine = in.readLine()).equals("END_OF_ITEMS")) {
+            System.out.println(inputLine);
+        }
+    }
+
+    private void deleteDiscardMenuItems() {
+        System.out.print("Enter IDs of the discard menu items to delete (comma separated): ");
+        String ids = scanner.nextLine();
+        out.println("Chef_DELETE_DISCARD " + ids);
+        out.flush();
         receiveAndPrintSingleResponse();
     }
 

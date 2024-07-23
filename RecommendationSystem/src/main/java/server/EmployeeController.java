@@ -39,6 +39,8 @@ public class EmployeeController {
             handleGiveFeedback(command);
         } else if (command.startsWith("Employee_UPDATE_PROFILE")) {
             handleUpdateProfile(command);
+        } else if (command.startsWith("Employee_SUBMIT_DETAILED_FEEDBACK")) {
+            handleSubmitDetailedFeedback(command);
         }
     }
 
@@ -94,7 +96,7 @@ public class EmployeeController {
 
     private void handleViewFullMenu() throws IOException {
         try {
-            List<String> menuItems = menuService.getAllMenuItemsFormatted();
+			List<String> menuItems = menuService.getAllMenuItemsFormatted();
             for (String item : menuItems) {
                 out.println(item);
             }
@@ -141,6 +143,26 @@ public class EmployeeController {
             out.flush();
         } else {
             out.println("Invalid UPDATE_PROFILE command.");
+            out.flush();
+        }
+    }
+
+    private void handleSubmitDetailedFeedback(String command) throws IOException {
+        String[] parts = command.split("#", 5);
+        if (parts.length == 5) {
+            int itemId = Integer.parseInt(parts[1]);
+            String question1 = parts[2];
+            String question2 = parts[3];
+            String question3 = parts[4];
+            try {
+                employeeService.submitDetailedFeedback(itemId, question1, question2, question3);
+                out.println("Detailed feedback submitted successfully.");
+            } catch (SQLException e) {
+                out.println("Error submitting detailed feedback: " + e.getMessage());
+            }
+            out.flush();
+        } else {
+            out.println("Invalid SUBMIT_DETAILED_FEEDBACK command.");
             out.flush();
         }
     }

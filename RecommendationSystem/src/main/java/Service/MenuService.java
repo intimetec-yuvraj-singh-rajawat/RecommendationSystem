@@ -32,7 +32,7 @@ public class MenuService {
         List<String> formattedMenuItems = new ArrayList<>();
         List<MenuItem> menuItems = getAllMenuItems();
         for (MenuItem item : menuItems) {
-            formattedMenuItems.add(item.toString());  // Assuming MenuItem has a meaningful toString implementation
+            formattedMenuItems.add(item.toString());  
         }
         return formattedMenuItems;
     }
@@ -106,5 +106,39 @@ public class MenuService {
             preparedStatement.setInt(3, 0);
             preparedStatement.executeUpdate();
         }
+    }
+    
+    public List<String> getMenuItemsByIds(List<Integer> foodIds) throws SQLException {
+        List<String> foodItems = new ArrayList<>();
+        if (foodIds == null || foodIds.isEmpty()) {
+            return foodItems; // Return an empty list if the input list is null or empty
+        }
+
+        String sql = "SELECT id, name FROM MenuItem WHERE id IN (" + generatePlaceholders(foodIds.size()) + ")";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            for (int i = 0; i < foodIds.size(); i++) {
+                preparedStatement.setInt(i + 1, foodIds.get(i));
+            }
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    foodItems.add(resultSet.getInt("id") + ": " + resultSet.getString("name"));
+                }
+            }
+        }
+        return foodItems;
+    }
+
+    private String generatePlaceholders(int count) {
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            placeholders.append("?");
+            if (i < count - 1) {
+                placeholders.append(",");
+            }
+        }
+        return placeholders.toString();
     }
 }

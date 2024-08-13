@@ -1,0 +1,40 @@
+package server;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.SQLException;
+
+import Service.ChefService;
+
+public class ChefController {
+    private PrintWriter out;
+    private BufferedReader in;
+    private ChefService chefService;
+
+    public ChefController(PrintWriter out, BufferedReader in) {
+        this.out = out;
+        this.in = in;
+        this.chefService = new ChefService();
+    }
+
+    public void processCommand(String command) throws IOException {
+        if (command.startsWith("Chef_VIEW")) {
+            try {
+                chefService.viewAllMenuItems(out);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (command.startsWith("Chef_RECOMMEND")) {
+            chefService.seeRecommendedItems(out);
+        } else if (command.startsWith("Chef_ROLLOUT")) {
+            try {
+                chefService.rollOutItems(command.split(" ")[1], out);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            out.println("Unknown chef command");
+        }
+    }
+}

@@ -1,0 +1,69 @@
+package Service;
+
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+
+import db.Database;
+import model.Feedback;
+import model.MenuItem;
+import recommendations.RecommendationEngine;
+
+public class ChefService {
+    private MenuService menuService = new MenuService();
+    private FeedbackService feedbackService = new FeedbackService();
+    private RecommendationEngine recommendationEngine;
+
+    public void viewAllMenuItems(PrintWriter out) throws SQLException {
+        List<MenuItem> menuItems = menuService.getAllMenuItems();
+        for (MenuItem item : menuItems) {
+            out.println(item);
+        }
+        out.println("END_OF_ITEMS");
+        out.flush();
+    }
+
+    public void seeRecommendedItems(PrintWriter out) {
+        List<Feedback> feedbacks = feedbackService.getFeedbacks();
+        recommendationEngine = new RecommendationEngine(feedbacks);
+
+        Map<Integer, Double> itemRatings = recommendationEngine.getItemRatings();
+        Map<Integer, String> itemFeedbackSentiments = recommendationEngine.getItemFeedbackSentiments();
+
+        for (Map.Entry<Integer, Double> entry : itemRatings.entrySet()) {
+            Integer itemId = entry.getKey();
+            Double rating = entry.getValue();
+            String sentiment = itemFeedbackSentiments.get(itemId);
+            out.println(itemId + " = Rating: " + String.format("%.2f", rating) + ", Sentiment: " + sentiment);
+        }
+
+        out.flush();
+    }
+
+    public void rollOutItems(String itemIdsStr, PrintWriter out) throws SQLException {
+        String[] itemIdsArray = itemIdsStr.split(",");
+        try (Connection conn = Database.getConnection()) {
+            String query = "INSERT INTO dailymenuitem (item_id) VALUES (?)";
+            PreparedStatement stmt = conn.prepareStatement(query);
+            
+            for (String itemIdStr : itemIdsArray) {
+                try {
+                    int itemId = Integer.parseInt(itemIdStr.trim());
+                    stmt.setInt(1, itemId);
+                    stmt.addBatch();
+                } catch (NumberFormatException e) {
+                    out.println("Invalid item ID: " + itemIdStr);
+                }
+            }
+            
+            int[] result = stmt.executeBatch();
+            out.println("Items rolled out successfully. " + result.length + " items added to the daily menu.");
+        } catch (SQLException e) {
+            out.println("Error rolling out items: " + e.getMessage());
+        }
+        out.flush();
+    }
+}

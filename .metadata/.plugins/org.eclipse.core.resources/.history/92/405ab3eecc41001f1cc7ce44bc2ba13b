@@ -1,0 +1,87 @@
+package server;
+
+import Service.EmployeeService;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.SQLException;
+
+public class EmployeeController {
+    private EmployeeService employeeService;
+    private PrintWriter out;
+    private BufferedReader in;
+
+    public EmployeeController(PrintWriter out, BufferedReader in) throws SQLException {
+        this.out = out;
+        this.in = in;
+        this.employeeService = new EmployeeService();
+    }
+
+    public void processCommand(String command) throws IOException, SQLException {
+        if (command.equals("Employee_VIEW_NOTIFICATIONS")) {
+            viewNotifications();
+        } else if (command.equals("Employee_VIEW_MENU")) {
+            viewMenu();
+        } else if (command.equals("Employee_GIVE_FEEDBACK")) {
+            giveFeedback();
+        } else if (command.startsWith("Employee_VOTE_ITEM")) {
+            voteForRolledOutItem(command);
+        } else {
+            out.println("Unknown Employee command");
+            out.flush();
+        }
+    }
+
+    private void viewNotifications() throws SQLException {
+        var notifications = employeeService.getNotifications();
+        for (var notification : notifications) {
+            out.println(notification.toString());
+        }
+        out.println("END_OF_NOTIFICATIONS");
+        out.flush();
+    }
+
+    private void viewMenu() throws SQLException {
+        var menuItems = employeeService.getAllMenuItems();
+        for (var item : menuItems) {
+            out.println(item.toString());
+        }
+        out.println("END_OF_MENU_ITEMS");
+        out.flush();
+    }
+
+    private void giveFeedback() throws IOException, SQLException {
+        out.println("Enter item ID:");
+        out.flush();
+        int itemId = Integer.parseInt(in.readLine());
+
+        out.println("Enter rating (1-5):");
+        out.flush();
+        int rating = Integer.parseInt(in.readLine());
+
+        out.println("Enter your comment:");
+        out.flush();
+        String comment = in.readLine();
+
+        out.println("Enter your user ID:");
+        out.flush();
+        int userId = Integer.parseInt(in.readLine());
+
+        employeeService.giveFeedback(userId, itemId, rating, comment);
+        out.println("Feedback submitted successfully.");
+        out.flush();
+    }
+
+    private void voteForRolledOutItem(String command) throws SQLException {
+        String[] parts = command.split(" ");
+        if (parts.length == 2) {
+            int itemId = Integer.parseInt(parts[1]);
+            employeeService.voteForRolledOutItem(itemId);
+            out.println("Vote submitted successfully.");
+        } else {
+            out.println("Invalid VOTE_ITEM command format");
+        }
+        out.flush();
+    }
+}

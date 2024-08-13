@@ -1,0 +1,88 @@
+package client;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.Scanner;
+
+public class EmployeeHandler {
+    private Socket socket;
+    private BufferedReader in;
+    private PrintWriter out;
+    private Scanner scanner;
+    private int userId;
+
+    public EmployeeHandler(Socket socket, PrintWriter out, BufferedReader in) {
+        this.socket = socket;
+        this.out = out;
+        this.in = in;
+        this.scanner = new Scanner(System.in);
+    }
+
+    public void showMenu(int userId) throws IOException {
+        this.userId = userId;
+        int choice;
+        do {
+            System.out.println("Employee Menu:");
+            System.out.println("1. View Notifications");
+            System.out.println("2. Vote for Today's Rolled Out Items");
+            System.out.println("3. Update your Profile");
+            System.out.println("4. Logout");
+            choice = scanner.nextInt();
+            scanner.nextLine(); // Consume the newline after nextInt()
+            handleUserChoice(choice);
+        } while (choice != 4);
+
+        System.out.println("Logged out. Goodbye!");
+    }
+
+    private void handleUserChoice(int choice) throws IOException {
+        switch (choice) {
+            case 1:
+                viewNotifications();
+                break;
+            case 2:
+                voteForRolledOutItems();
+                break;
+            case 3:
+                updateProfile();
+                break;
+            case 4:
+                logout();
+                break;
+            default:
+                System.out.println("Invalid choice. Please try again.");
+                break;
+        }
+    }
+
+    private void updateProfile() throws IOException {
+        System.out.println("Please answer these questions to know your preferences:");
+        System.out.println("1) Please select one - Vegetarian, Non Vegetarian, Eggetarian");
+        String preference = scanner.nextLine();
+        System.out.println("2) Please select your spice level - High, Medium, Low");
+        String spiceLevel = scanner.nextLine();
+        System.out.println("3) What do you prefer most? - North Indian, South Indian, Other");
+        String cuisine = scanner.nextLine();
+        System.out.println("4) Do you have a sweet tooth? - Yes, No");
+        String sweetTooth = scanner.nextLine();
+
+        out.println("Employee_UPDATE_PROFILE " + userId + " " + preference + " " + spiceLevel + " " + cuisine + " " + sweetTooth);
+        out.flush();
+        System.out.println(in.readLine()); // Read the result
+    }
+
+    private void viewNotifications() {
+        // Implementation for viewing notifications
+    }
+
+    private void voteForRolledOutItems() {
+        // Implementation for voting
+    }
+
+    private void logout() throws IOException {
+        out.println("LOGOUT");
+        out.flush();
+    }
+}

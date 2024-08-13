@@ -1,0 +1,29 @@
+package Service;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import db.Database;
+
+public class EmployeeService {
+    private Connection connection;
+
+    public EmployeeService() throws SQLException {
+        this.connection = Database.getConnection();
+    }
+
+    public void updateProfile(int userId, String preference, String spiceLevel, String cuisine, String sweetTooth) throws SQLException {
+        String sql = "INSERT INTO Profile (user_id, preference, spice_level, cuisine, sweet_tooth) VALUES (?, ?, ?, ?, ?) " +
+                     "ON DUPLICATE KEY UPDATE preference = VALUES(preference), spice_level = VALUES(spice_level), " +
+                     "cuisine = VALUES(cuisine), sweet_tooth = VALUES(sweet_tooth)";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            statement.setString(2, preference);
+            statement.setString(3, spiceLevel);
+            statement.setString(4, cuisine);
+            statement.setString(5, sweetTooth);
+            statement.executeUpdate();
+        }
+    }
+}

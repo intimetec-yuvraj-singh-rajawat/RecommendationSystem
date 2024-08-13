@@ -1,0 +1,64 @@
+package server;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.SQLException;
+
+import Service.ChefService;
+
+public class ChefController {
+    private PrintWriter out;
+    private BufferedReader in;
+    private ChefService chefService;
+
+    public ChefController(PrintWriter out, BufferedReader in) {
+        this.out = out;
+        this.in = in;
+        this.chefService = new ChefService();
+    }
+
+    public void processCommand(String command) throws IOException {
+        if (command.startsWith("Chef_VIEW")) {
+            try {
+                chefService.viewAllMenuItems(out);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (command.startsWith("Chef_RECOMMEND")) {
+            String[] parts = command.split(" ");
+            if (parts.length >= 2) {
+                try {
+                    int numberOfItems = Integer.parseInt(parts[1]);
+                    if (numberOfItems > 0) {
+                        out.println("Recommended Breakfast Items:");
+                        chefService.seeRecommendedItems("breakfast", numberOfItems, out);
+                        out.println();
+
+                        out.println("Recommended Lunch Items:");
+                        chefService.seeRecommendedItems("lunch", numberOfItems, out);
+                        out.println();
+
+                        out.println("Recommended Dinner Items:");
+                        chefService.seeRecommendedItems("dinner", numberOfItems, out);
+                    } else {
+                        out.println("Invalid number of items specified.");
+                    }
+                } catch (NumberFormatException e) {
+                    out.println("Invalid command format. Use: Chef_RECOMMEND <number>");
+                }
+            } else {
+                out.println("Invalid command format. Use: Chef_RECOMMEND <number>");
+            }
+        } else if (command.startsWith("Chef_ROLLOUT")) {
+            try {
+                chefService.rollOutItems(command.split(" ")[1], out);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            out.println("Unknown chef command");
+        }
+        out.flush();
+    }
+}

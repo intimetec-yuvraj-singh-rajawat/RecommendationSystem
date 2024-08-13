@@ -1,0 +1,50 @@
+package model;
+
+import java.util.Date;
+
+public class Notification {
+    private int id;
+    private Date date;
+    private int itemId;
+    private String itemName;
+    private String message;
+
+    public Notification(int id, Date date, int itemId, String itemName, String message) {
+        this.id = id;
+        this.date = date;
+        this.itemId = itemId;
+        this.itemName = itemName;
+        this.message = message;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public int getItemId() {
+        return itemId;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    @Override
+    public String toString() {
+        return "Notification{" +
+                "id=" + id +
+                ", date=" + date +
+                ", itemId=" + itemId +
+                ", itemName='" + itemName + '\'' +
+                ", message='" + message + '\'' +
+                '}';
+    }
+}

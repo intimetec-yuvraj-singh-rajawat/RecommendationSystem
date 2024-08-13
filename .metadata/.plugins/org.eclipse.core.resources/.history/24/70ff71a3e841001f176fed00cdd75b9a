@@ -1,0 +1,49 @@
+package client;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+
+public class CafeteriaClient {
+    private static final String SERVER_ADDRESS = "localhost";
+    private static final int SERVER_PORT = 12345;
+
+    public static void main(String[] args) {
+        try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in))) {
+
+            System.out.print("Enter username: ");
+            String username = stdIn.readLine();
+            System.out.print("Enter password: ");
+            String password = stdIn.readLine();
+
+            out.println("LOGIN " + username + " " + password);
+            String response = in.readLine();
+            System.out.println("Server reply: " + response);
+
+            if ("LOGIN SUCCESSFUL".equals(response)) {
+                String userId = in.readLine();
+                String roleId = in.readLine();
+                System.out.println("Role ID: " + roleId);
+                if ("Admin".equals(roleId)) {
+                    AdminHandler adminHandler = new AdminHandler(socket, out, in);
+                    adminHandler.showMenu();
+                } else if ("Chef".equals(roleId)) {
+                    ChefHandler chefHandler = new ChefHandler(socket, out, in);
+                    chefHandler.showMenu();
+                } else if ("Employee".equals(roleId)) {
+                    EmployeeHandler employeeHandler = new EmployeeHandler(socket, out, in);
+                    employeeHandler.showMenu(Integer.parseInt(userId));
+                }
+            } else {
+                System.out.println("Login failed. Please try again.");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}

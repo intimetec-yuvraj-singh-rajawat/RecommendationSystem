@@ -1,0 +1,32 @@
+package service;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import db.Database;
+
+public class DailyMenuService {
+
+    public void addItemToDailyMenu(int itemId) throws SQLException {
+        try (Connection conn = Database.getConnection()) {
+            String query = "INSERT INTO dailymenuitem (item_id) VALUES (?)";
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setInt(1, itemId);
+            stmt.executeUpdate();
+        }
+    }
+
+    public void addItemsToDailyMenu(int[] itemIds) throws SQLException {
+        try (Connection conn = Database.getConnection()) {
+            String query = "INSERT INTO dailymenuitem (item_id) VALUES (?)";
+            PreparedStatement stmt = conn.prepareStatement(query);
+
+            for (int itemId : itemIds) {
+                stmt.setInt(1, itemId);
+                stmt.addBatch();
+            }
+
+            stmt.executeBatch();
+        }
+    }
+}

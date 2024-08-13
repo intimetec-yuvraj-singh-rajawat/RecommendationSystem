@@ -1,0 +1,87 @@
+package Service;
+
+import db.Database;
+import model.Feedback;
+import model.MenuItem;
+import model.Notification;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class EmployeeService {
+    private Connection connection;
+
+    public EmployeeService() throws SQLException {
+        this.connection = Database.getConnection();
+    }
+
+    public List<Notification> getNotifications() throws SQLException {
+        List<Notification> notifications = new ArrayList<>();
+        String sql = "SELECT * FROM notifications WHERE date = CURDATE()";
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+            while (resultSet.next()) {
+                Notification notification = new Notification(
+                        resultSet.getInt("id"),
+                        resultSet.getString("message"),
+                        resultSet.getDate("date")
+                );
+                notifications.add(notification);
+            }
+        }
+        return notifications;
+    }
+
+    public List<String> getRolledOutItemsForToday() throws SQLException {
+        List<String> items = new ArrayList<>();
+        String sql = "SELECT d.id, m.name FROM DailyMenuItem d JOIN MenuItem m ON d.item_id = m.id WHERE d.date = CURDATE()";
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String name = resultSet.getString("name");
+                items.add("ID: " + id + " - " + name);
+            }
+        }
+        return items;
+    }
+
+    public List<MenuItem> getAllMenuItems() throws SQLException {
+        List<MenuItem> menuItems = new ArrayList<>();
+        String sql = "SELECT * FROM MenuItem";
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+            while (resultSet.next()) {
+                MenuItem menuItem = new MenuItem(
+                        resultSet.getInt("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("description"),
+                        resultSet.getDouble("price"),
+                        resultSet.getBoolean("availability")
+                );
+                menuItems.add(menuItem);
+            }
+        }
+        return menuItems;
+    }
+
+    public void voteForRolledOutItem(int itemId) throws SQLException {
+        String sql = "UPDATE DailyMenuItem SET vote = vote + 1 WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, itemId);
+            statement.executeUpdate();
+        }
+    }
+
+    public void giveFeedback(int userId, int itemId, int rating, String comment) throws SQLException {
+        String sql = "INSERT INTO feedback (user_id, item_id, rating, comment, date) VALUES (?, ?, ?, ?, CURDATE())";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            statement.setInt(2, itemId);
+            statement.setInt(3, rating);
+            statement.setString(4, comment);
+            statement.executeUpdate();
+        }
+    }
+}

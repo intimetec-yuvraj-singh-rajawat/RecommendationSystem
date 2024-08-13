@@ -1,0 +1,61 @@
+package Service;
+
+import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.util.List;
+import model.Feedback;
+import recommendations.RecommendationEngine;
+
+public class ChefService {
+    private MenuService menuService = new MenuService();
+    private FeedbackService feedbackService = new FeedbackService();
+    private DailyMenuService dailyMenuService = new DailyMenuService();
+    private RecommendationEngine recommendationEngine;
+
+    public void viewAllMenuItems(PrintWriter out) throws SQLException {
+        List<MenuItem> menuItems = menuService.getAllMenuItems();
+        for (MenuItem item : menuItems) {
+            out.println(item);
+        }
+        out.println("END_OF_ITEMS");
+        out.flush();
+    }
+
+    public void seeRecommendedItems(String mealCategory, int numberOfItems, PrintWriter out) {
+        List<Feedback> feedbacks = feedbackService.getFeedbacks();
+        recommendationEngine = new RecommendationEngine(feedbacks);
+
+        List<Integer> recommendedItems = recommendationEngine.getRecommendedItems(mealCategory, numberOfItems);
+
+        out.println("Recommended " + mealCategory.substring(0, 1).toUpperCase() + mealCategory.substring(1) + " Items:");
+        for (Integer itemId : recommendedItems) {
+            out.println(itemId + " = " + recommendationEngine.getItemRatings().get(itemId) + ", Sentiment: " + recommendationEngine.getItemFeedbackSentiments().get(itemId));
+        }
+        out.println("END_OF_ITEMS");
+        out.flush();
+    }
+
+    public void rollOutItems(String itemIdsStr, PrintWriter out) throws SQLException {
+        String[] itemIdsArray = itemIdsStr.split(",");
+        int[] itemIds = new int[itemIdsArray.length];
+        int count = 0;
+
+        for (String itemIdStr : itemIdsArray) {
+            try {
+                itemIds[count] = Integer.parseInt(itemIdStr.trim());
+                count++;
+            } catch (NumberFormatException e) {
+                out.println("Invalid item ID: " + itemIdStr);
+            }
+        }
+
+        try {
+            dailyMenuService.addItemsToDailyMenu(itemIds);
+            out.println("Items rolled out successfully. " + count + " items added to the daily menu.");
+        } catch (SQLException e) {
+            out.println("Error rolling out items: " + e.getMessage());
+        }
+
+        out.flush();
+    }
+}

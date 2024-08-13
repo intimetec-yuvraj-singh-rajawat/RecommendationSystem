@@ -1,0 +1,46 @@
+import model.Notification;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class NotificationService {
+    private Connection connection;
+
+    // Constructor to initialize connection
+    public NotificationService(Connection connection) {
+        this.connection = connection;
+    }
+
+    public List<Notification> getNotifications() throws SQLException {
+        List<Notification> notifications = new ArrayList<>();
+        String sql = "SELECT * FROM notification ORDER BY date DESC";
+        try (PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                Date date = resultSet.getDate("date");
+                int itemId = resultSet.getInt("item_id");
+                String message = resultSet.getString("message");
+                String itemName = getMenuItemName(itemId); // Get item name from menu_item table
+                notifications.add(new Notification(id, date, itemId, itemName, message));
+            }
+        }
+        return notifications;
+    }
+
+    // Method to retrieve item name based on item_id from menu_item table
+    private String getMenuItemName(int itemId) throws SQLException {
+        String itemName = null;
+        String sql = "SELECT name FROM menu_item WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, itemId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    itemName = resultSet.getString("name");
+                }
+            }
+        }
+        return itemName;
+    }
+}

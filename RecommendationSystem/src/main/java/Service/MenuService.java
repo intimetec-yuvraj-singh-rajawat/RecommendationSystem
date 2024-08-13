@@ -1,0 +1,144 @@
+package Service;
+
+import db.Database;
+import model.MenuItem;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class MenuService {
+
+    public List<MenuItem> getAllMenuItems() throws SQLException {
+        List<MenuItem> menuItems = new ArrayList<>();
+        String sql = "SELECT * FROM MenuItem";
+        try (Connection connection = Database.getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+            while (resultSet.next()) {
+                MenuItem menuItem = new MenuItem(
+                        resultSet.getInt("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("description"),
+                        resultSet.getDouble("price"),
+                        resultSet.getBoolean("availability")
+                );
+                menuItems.add(menuItem);
+            }
+        }
+        return menuItems;
+    }
+    public List<String> getAllMenuItemsFormatted() throws SQLException {
+        List<String> formattedMenuItems = new ArrayList<>();
+        List<MenuItem> menuItems = getAllMenuItems();
+        for (MenuItem item : menuItems) {
+            formattedMenuItems.add(item.toString());  
+        }
+        return formattedMenuItems;
+    }
+
+    public MenuItem getMenuItemById(int id) throws SQLException {
+        String sql = "SELECT * FROM MenuItem WHERE id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, id);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return new MenuItem(
+                            resultSet.getInt("id"),
+                            resultSet.getString("name"),
+                            resultSet.getString("description"),
+                            resultSet.getDouble("price"),
+                            resultSet.getBoolean("availability")
+                    );
+                }
+            }
+        }
+        return null;
+    }
+
+    public void addMenuItem(MenuItem menuItem) throws SQLException {
+        String sql = "INSERT INTO MenuItem (name, description, price, availability) VALUES (?, ?, ?, ?)";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            preparedStatement.setString(1, menuItem.getName());
+            preparedStatement.setString(2, menuItem.getDescription());
+            preparedStatement.setDouble(3, menuItem.getPrice());
+            preparedStatement.setBoolean(4, menuItem.isAvailability());
+            preparedStatement.executeUpdate();
+
+            // Retrieve auto-generated ID
+            ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                menuItem.setId(generatedKeys.getInt(1));
+            }
+        }
+    }
+
+    public void updateMenuItem(MenuItem menuItem) throws SQLException {
+        String sql = "UPDATE MenuItem SET name = ?, description = ?, price = ?, availability = ? WHERE id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, menuItem.getName());
+            preparedStatement.setString(2, menuItem.getDescription());
+            preparedStatement.setDouble(3, menuItem.getPrice());
+            preparedStatement.setBoolean(4, menuItem.isAvailability());
+            preparedStatement.setInt(5, menuItem.getId());
+            preparedStatement.executeUpdate();
+        }
+    }
+
+    public void deleteMenuItem(int id) throws SQLException {
+        String sql = "DELETE FROM MenuItem WHERE id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, id);
+            preparedStatement.executeUpdate();
+        }
+    }
+
+    public void addToDailyMenu(int itemId) throws SQLException {
+        String sql = "INSERT INTO DailyMenuItem (date, item_id, vote) VALUES (?, ?, ?)";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setDate(1, new Date(System.currentTimeMillis()));
+            preparedStatement.setInt(2, itemId);
+            preparedStatement.setInt(3, 0);
+            preparedStatement.executeUpdate();
+        }
+    }
+    
+    public List<String> getMenuItemsByIds(List<Integer> foodIds) throws SQLException {
+        List<String> foodItems = new ArrayList<>();
+        if (foodIds == null || foodIds.isEmpty()) {
+            return foodItems; // Return an empty list if the input list is null or empty
+        }
+
+        String sql = "SELECT id, name FROM MenuItem WHERE id IN (" + generatePlaceholders(foodIds.size()) + ")";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            for (int i = 0; i < foodIds.size(); i++) {
+                preparedStatement.setInt(i + 1, foodIds.get(i));
+            }
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    foodItems.add(resultSet.getInt("id") + ": " + resultSet.getString("name"));
+                }
+            }
+        }
+        return foodItems;
+    }
+
+    private String generatePlaceholders(int count) {
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            placeholders.append("?");
+            if (i < count - 1) {
+                placeholders.append(",");
+            }
+        }
+        return placeholders.toString();
+    }
+}
